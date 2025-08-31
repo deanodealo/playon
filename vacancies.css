@@ -10,6 +10,9 @@ body {
   background: #ffffff;
   color: #1A2A44;
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* ===== Header ===== */
@@ -17,7 +20,7 @@ header {
   position: relative;
   height: 80px;
   display: flex;
-  justify-content: space-between; /* burger left, logo right */
+  justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
   background: #1A2A44;
@@ -108,7 +111,7 @@ header img {
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: 2005;
-  border-radius: 0 15px 15px 0; /* rounded edges */
+  border-radius: 0 15px 15px 0;
 }
 
 .side-menu.open {
@@ -144,6 +147,10 @@ header img {
 }
 
 /* ===== Page Container ===== */
+main {
+  flex: 1; /* ensures footer stays at bottom */
+}
+
 .container {
   max-width: 1000px;
   margin: 2rem auto;
@@ -218,7 +225,7 @@ header img {
   color: #444;
 }
 
-/* Buttons (if you add them) */
+/* Buttons */
 .btn {
   padding: 0.8rem 1.4rem;
   background: #27AE60;
@@ -244,6 +251,7 @@ header img {
   background: #c92f3b;
 }
 
+
 /* ===== Responsive ===== */
 @media(max-width: 700px) {
   .vacancy-card {
@@ -262,7 +270,28 @@ header img {
   .btn {
     width: 100%;
   }
-   header img {
+
+  header img {
     max-height: 50px;
   }
+}
+
+/* ===== Footer ===== */
+footer {
+  display: block;
+  text-align: center;
+  padding: 2rem;
+  background-color: #1A2A44;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+footer a {
+  color: #27AE60;
+  margin: 0 0.5rem;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
 }
