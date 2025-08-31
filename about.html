@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About - PlayOn</title>
+  <link rel="stylesheet" href="about.css" />
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <!-- Animated Burger Button -->
+  <button class="burger" aria-label="Menu" onclick="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Logo Top-Right -->
+  <div class="logo-container">
+    <img src="images/logo.png" alt="PlayOn Logo" />
+  </div>
+</header>
+
+<!-- Overlay -->
+<div id="menuOverlay" class="overlay" onclick="closeMenu()"></div>
+
+<!-- Side Menu -->
+<nav id="sideMenu" class="side-menu">
+  <a href="index.html">Home</a>
+  <a href="about.html">About</a>
+  <a href="vacancies.html">Vacancies</a>
+  <a href="#">Login</a>
+  <a href="#">Register</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>About PlayOn</h1>
+  <p>Connecting players, teams, coaches, and referees at grassroots level.</p>
+</section>
+
+<!-- Intro Section -->
+<section class="about-intro">
+  <div class="container">
+    <h2>What We Do</h2>
+    <p>
+      PlayOn makes grassroots football simple. Whether you’re a manager 
+      looking for players, or a player looking for a team, PlayOn connects 
+      the grassroots community and helps everyone find their game.  
+    </p>
+  </div>
+</section>
+
+<!-- Roles Section -->
+<section class="roles">
+  <div class="container">
+    <!-- Manager Card -->
+    <div class="card">
+      <h3>For Managers</h3>
+      <p>
+        Register via our quick and simple form. Add details of your vacancies, 
+        which will display on the Vacancies page with your contact details.  
+        You can manage, edit, or delete your listings at the click of a button.
+      </p>
+      <div class="btn-container">
+        <a href="register.html" class="btn">Register Now</a>
+      </div>
+    </div>
+
+    <!-- Player Card -->
+    <div class="card">
+      <h3>For Players</h3>
+      <p>
+        Select your preferences by position, location, and experience.  
+        Browse available team vacancies, then contact the manager directly.  
+        It’s that easy to get onto the pitch.  
+      </p>
+      <div class="btn-container">
+        <a href="vacancies.html" class="btn">Find a Team</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>&copy; 2025 PlayOn. All rights reserved.</p>
+  <p>
+    <a href="#">About</a> |
+    <a href="#">Contact</a> |
+    <a href="#">Privacy</a>
+  </p>
+</footer>
+
+<script>
+  const burger = document.querySelector('.burger');
+  const sideMenu = document.getElementById('sideMenu');
+  const overlay = document.getElementById('menuOverlay');
+
+  function toggleMenu() {
+    const isOpening = !sideMenu.classList.contains('open');
+
+    sideMenu.classList.toggle('open', isOpening);
+    overlay.classList.toggle('active', isOpening);
+    burger.classList.toggle('open', isOpening); // animate burger to X
+    document.body.classList.toggle('menu-open', isOpening);
+  }
+
+  function closeMenu() {
+    sideMenu.classList.remove('open');
+    overlay.classList.remove('active');
+    burger.classList.remove('open'); // reset burger icon
+    document.body.classList.remove('menu-open');
+  }
+
+  // Close menu when a link is clicked or ESC key pressed
+  document.addEventListener('DOMContentLoaded', function () {
+    const links = sideMenu.querySelectorAll('a');
+    links.forEach(link => link.addEventListener('click', closeMenu));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
+    });
+  });
+</script>
+
+
+</body>
+</html>

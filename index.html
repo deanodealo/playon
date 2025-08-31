@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlayOn - Find Your Game</title>
+  <link rel="stylesheet" href="index.css" />
+
+<!-- Standard Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="images/logo2-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/logo2-16.png">
+
+<!-- Apple Touch Icons -->
+<link rel="apple-touch-icon" sizes="180x180" href="images/logo2-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/logo2-152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/logo2-120.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/logo2-76.png">
+
+<!-- Android / Chrome -->
+<link rel="icon" type="image/png" sizes="192x192" href="images/logo2-192.png">
+
+<!-- Manifest for PWA -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Optional: MS (Windows) Tile -->
+<meta name="msapplication-TileImage" content="images/logo2-144.png">
+<meta name="msapplication-TileColor" content="#1A2A44">
+
+
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <!-- Animated Burger Button -->
+  <button class="burger" aria-label="Menu" onclick="toggleMenu()">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Logo Top-Right -->
+  <div class="logo-container">
+    <img src="images/logo.png" alt="PlayOn Logo" />
+  </div>
+</header>
+
+<!-- Overlay -->
+<div id="menuOverlay" class="overlay" onclick="closeMenu()"></div>
+
+<!-- Side Menu -->
+<nav id="sideMenu" class="side-menu">
+  <a href="index.html">Home</a>
+  <a href="about.html">About</a>
+  <a href="vacancies.html">Vacancies</a>
+  <a href="#">Login</a>
+  <a href="#">Register</a>
+</nav>
+
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Players. Teams. Coaches. Refs. Connected.</h1>
+    <p>PlayOn makes grassroots football simple. Find your game today.</p>
+    <a href="about.html" class="hero-btn">Get Started</a>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="feature-card">
+      <h3>🔍 Player Search</h3>
+      <p>Search by Age, Location & Experience</p>
+    </div>
+    <div class="feature-card">
+      <h3>🏆 Find Teams</h3>
+      <p>Players can join teams that match their age, skill, and location.</p>
+    </div>
+    <div class="feature-card">
+      <h3>🎓 Find Coaches</h3>
+      <p>Coaches looking for teams, or teams seeking the right coach.</p>
+    </div>
+    <div class="feature-card">
+      <h3>
+        <img src="images/whistle.svg" alt="Whistle" class="icon" />
+        Find Refs
+      </h3>
+      <p>Connect with referees for your next match or tournament.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 PlayOn. All rights reserved.</p>
+    <p>
+      <a href="#">About</a> |
+      <a href="#">Contact</a> |
+      <a href="#">Privacy</a>
+    </p>
+  </footer>
+
+<script>
+  const burger = document.querySelector('.burger');
+  const sideMenu = document.getElementById('sideMenu');
+  const overlay = document.getElementById('menuOverlay');
+
+  function toggleMenu() {
+    const isOpening = !sideMenu.classList.contains('open');
+
+    sideMenu.classList.toggle('open', isOpening);
+    overlay.classList.toggle('active', isOpening);
+    burger.classList.toggle('open', isOpening); // animate burger to X
+    document.body.classList.toggle('menu-open', isOpening);
+  }
+
+  function closeMenu() {
+    sideMenu.classList.remove('open');
+    overlay.classList.remove('active');
+    burger.classList.remove('open'); // reset burger icon
+    document.body.classList.remove('menu-open');
+  }
+
+  // Close menu when a link is clicked or ESC key pressed
+  document.addEventListener('DOMContentLoaded', function () {
+    const links = sideMenu.querySelectorAll('a');
+    links.forEach(link => link.addEventListener('click', closeMenu));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
+    });
+  });
+</script>
+
+
+</body>
+</html>

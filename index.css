@@ -1,0 +1,220 @@
+/* ===== General Reset ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', Arial, sans-serif;
+  background: #ffffff;
+  color: #1A2A44;
+  line-height: 1.5;
+}
+
+/* ===== Header ===== */
+header {
+  position: relative;
+  height: 80px;
+  background: #1A2A44;
+}
+
+/* Burger button: top-left */
+.burger {
+  position: absolute;
+  left: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.burger span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background: #fff;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.burger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.burger.open span:nth-child(2) {
+  opacity: 0;
+}
+.burger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Logo top-right */
+.logo-container {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  padding: 10px 15px;
+  border-radius: 5px;
+  z-index: 1000;
+}
+
+header img {
+  display: block;
+  max-height: 60px;
+  width: auto;
+}
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+  z-index: 100;
+}
+
+.overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Side Menu with Rounded Edges */
+.side-menu {
+  position: fixed;
+  top: 80px;
+  left: 0;
+  width: 250px;
+  height: calc(100% - 80px);
+  background: linear-gradient(to bottom right, #1A2A44, #27AE60);
+  color: #fff;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 100;
+  border-top-right-radius: 15px;    /* rounded top-right corner */
+  border-bottom-right-radius: 15px; /* rounded bottom-right corner */
+}
+
+.side-menu.open {
+  transform: translateX(0);
+}
+
+.side-menu a {
+  text-decoration: none;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.side-menu a:hover {
+  color: #f1f1f1;
+}
+
+/* ===== Hero Section ===== */
+.hero {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(to bottom right, #1A2A44, #27AE60);
+  color: #fff;
+}
+
+.hero h1 {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.hero .hero-btn {
+  padding: 0.8rem 1.6rem;
+  font-size: 1rem;
+  background: #fff;
+  color: #1A2A44;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+  display: inline-block;
+  transition: 0.3s;
+}
+
+.hero .hero-btn:hover {
+  background: #f1f1f1;
+}
+
+/* ===== Features Grid ===== */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  padding: 3rem 2rem;
+}
+
+.feature-card {
+  background: #f9f9f9;
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-card h3 {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #1A2A44;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* ===== Footer ===== */
+footer {
+  text-align: center;
+  padding: 2rem;
+  background: #1A2A44;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+footer a {
+  color: #27AE60;
+  margin: 0 0.5rem;
+  text-decoration: none;
+}
+
+/* ===== Responsive ===== */
+@media(max-width: 600px) {
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+
+  header img {
+    max-height: 50px;
+  }
+}
