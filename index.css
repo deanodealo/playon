@@ -218,3 +218,22 @@ footer a {
     max-height: 50px;
   }
 }
+
+.menu-logo {
+  text-align: center;
+  padding: 1rem 0; /* space above/below logo */
+}
+
+.logo-wrapper {
+  display: inline-block;
+  background-color: #fff;       /* white square */
+  border-radius: 15px;          /* rounded corners */
+  padding: 20px;                /* space inside square around logo */
+  box-shadow: 0 0 10px rgba(0,0,0,0.2); /* optional subtle shadow */
+}
+
+.logo-wrapper img {
+  max-width: 100px;    /* scale to fit nicely inside square */
+  height: auto;
+  display: block;
+}
