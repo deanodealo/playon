@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About - PlayOn</title>
-  <link rel="stylesheet" href="about.css" />
+  <title>Add Vacancy - PlayOn</title>
+  <link rel="stylesheet" href="index.css" />
 </head>
 <body>
 
@@ -40,54 +40,37 @@
   </div>
 </nav>
 
-<!-- Hero -->
-<section class="hero">
-  <h1>About PlayOn</h1>
-  <p>Connecting players, teams, coaches, and referees at grassroots level.</p>
-</section>
+<!-- Hero Section for Form -->
+<!-- Hero Section for Form -->
+<section class="hero vacancy-hero">
+  <h1>Add a Vacancy</h1>
+  <p>Managers can submit new vacancies here. They will appear on the Vacancies page.</p>
 
-<!-- Intro Section -->
-<section class="about-intro">
-  <div class="container">
-    <h2>What We Do</h2>
-    <p>
-      PlayOn makes grassroots football simple. Whether you’re a manager 
-      looking for players, or a player looking for a team, PlayOn connects 
-      the grassroots community and helps everyone find their game.  
-    </p>
+  <div class="vacancy-form-container">
+    <form id="vacancyForm">
+      <label for="club">Club</label>
+      <input type="text" id="club" placeholder="Club Name" required>
+
+      <label for="position">Position</label>
+      <input type="text" id="position" placeholder="Position" required>
+
+      <label for="location">Location</label>
+      <input type="text" id="location" placeholder="Location" required>
+
+      <label for="experience">Experience</label>
+      <select id="experience" required>
+        <option value="">Select experience</option>
+        <option value="Junior">Junior</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Senior">Senior</option>
+      </select>
+
+      <button type="submit">Add Vacancy</button>
+    </form>
+    <div id="message"></div>
   </div>
 </section>
 
-<!-- Roles Section -->
-<section class="roles">
-  <div class="container">
-    <!-- Manager Card -->
-    <div class="card">
-      <h3>For Managers</h3>
-      <p>
-        Register via our quick and simple form. Add details of your vacancies, 
-        which will display on the Vacancies page with your contact details.  
-        You can manage, edit, or delete your listings at the click of a button.
-      </p>
-      <div class="btn-container">
-        <a href="manager-register.html" class="btn">Register Now</a>
-      </div>
-    </div>
-
-    <!-- Player Card -->
-    <div class="card">
-      <h3>For Players</h3>
-      <p>
-        Select your preferences by position, location, and experience.  
-        Browse available team vacancies, then contact the manager directly.  
-        It’s that easy to get onto the pitch.  
-      </p>
-      <div class="btn-container">
-        <a href="vacancies.html" class="btn">Find a Team</a>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- Footer -->
 <footer>
@@ -129,8 +112,26 @@
       if (e.key === 'Escape') closeMenu();
     });
   });
-</script>
 
+  // Temporary local form handling
+  const form = document.getElementById("vacancyForm");
+  const messageDiv = document.getElementById("message");
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const vacancyData = {
+      club: document.getElementById("club").value,
+      position: document.getElementById("position").value,
+      location: document.getElementById("location").value,
+      experience: document.getElementById("experience").value,
+      description: document.getElementById("description").value,
+      timestamp: new Date().toLocaleString()
+    };
+    console.log("Vacancy submitted:", vacancyData);
+    messageDiv.textContent = "Vacancy added successfully! (Check console)";
+    form.reset();
+  });
+</script>
 
 </body>
 </html>
