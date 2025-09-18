@@ -363,3 +363,198 @@ footer a {
     margin: 1rem;
   }
 }
+/* Login Popup Overlay */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+  z-index: 3000; /* Higher than menu overlay */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Login Form Container */
+.login-form-container {
+  background: #f9f9f9;
+  color: #1A2A44;
+  border-radius: 15px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  position: relative;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.login-overlay.active .login-form-container {
+  transform: scale(1);
+}
+
+/* Logo in popup */
+.login-logo {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-logo-wrapper {
+  display: inline-block;
+  background-color: #fff;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.login-logo-wrapper img {
+  max-width: 80px;
+  height: auto;
+  display: block;
+}
+
+/* Close button */
+.login-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #1A2A44;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.login-close:hover {
+  background: rgba(26, 42, 68, 0.1);
+}
+
+/* Form styling to match your existing forms */
+.login-form h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #1A2A44;
+  font-size: 1.4rem;
+}
+
+.login-form label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 1rem;
+  color: #1A2A44;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #27AE60;
+}
+
+.login-form button {
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  background: #27AE60;
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.login-form button:hover {
+  background: #1A2A44;
+  transform: scale(1.03);
+}
+
+.login-form button:disabled {
+  background: #ccc;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.forgot-password {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.forgot-password a {
+  color: #27AE60;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
+.login-message {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.login-message.success {
+  color: #27AE60;
+}
+
+.login-message.error {
+  color: #e74c3c;
+}
+
+/* Register link */
+.register-link {
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+}
+
+.register-link a {
+  color: #1A2A44;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.register-link a:hover {
+  color: #27AE60;
+}
+
+/* Responsive */
+@media(max-width: 600px) {
+  .login-form-container {
+    padding: 1.5rem;
+    margin: 0.5rem;
+  }
+
+  .login-logo-wrapper img {
+    max-width: 70px;
+  }
+}
