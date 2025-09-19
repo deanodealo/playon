@@ -112,7 +112,9 @@
       <input type="text" id="managerName" placeholder="Enter your name" required>
 
       <label for="teamName">Team</label>
-      <input type="text" id="teamName" placeholder="Team Name" required>
+      <select id="teamName" required>
+      <option value="">Loading teams...</option>
+      </select>
 
       <label for="location">Location</label>
       <input type="text" id="location" placeholder="City/Area (e.g., Stoke-on-Trent)" required>
@@ -172,6 +174,49 @@
     links.forEach(link => link.addEventListener('click', closeMenu));
   });
 
+  // Load teams when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  loadTeams();
+});
+
+async function loadTeams() {
+  const teamSelect = document.getElementById('teamName');
+  
+  try {
+    // Wait for Firebase to be ready
+    if (!window.firebaseReady) {
+      setTimeout(loadTeams, 500);
+      return;
+    }
+
+    const { collection, getDocs, orderBy, query } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    
+    // Get teams from Firestore
+    const teamsQuery = query(collection(window.db, 'teams'), orderBy('name'));
+    const querySnapshot = await getDocs(teamsQuery);
+    
+    // Clear loading option
+    teamSelect.innerHTML = '<option value="">Select your team</option>';
+    
+    // Add teams to dropdown
+    querySnapshot.forEach((doc) => {
+      const team = doc.data();
+      const option = document.createElement('option');
+      option.value = team.name;
+      option.textContent = team.name;
+      teamSelect.appendChild(option);
+    });
+    
+    console.log('Teams loaded successfully');
+    
+  } catch (error) {
+    console.error('Error loading teams:', error);
+    
+    // Fallback message
+    teamSelect.innerHTML = '<option value="">Error loading teams. Please refresh.</option>';
+  }
+}
+
   // Firebase Registration Handler
   document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById("registerForm");
@@ -206,6 +251,11 @@
         return;
       }
 
+      if (!teamName) {
+        showMessage('Please select a team!', 'error');
+         return;
+      }
+      
       // Disable button and show loading
       registerBtn.disabled = true;
       registerBtn.textContent = "Creating Account...";
