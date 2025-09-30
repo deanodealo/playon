@@ -5,33 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Vacancy - PlayOn</title>
   <link rel="stylesheet" href="index.css" />
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAX9ivQ4aKQzokUMEkNpGTIbbAUMJhLlys",
+      authDomain: "playon-1a86b.firebaseapp.com",
+      projectId: "playon-1a86b",
+      storageBucket: "playon-1a86b.firebasestorage.app",
+      messagingSenderId: "28141646391",
+      appId: "1:28141646391:web:98d83339ed46c17efa45b2",
+      measurementId: "G-Z12HWY8PFJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.auth = auth;
+    window.db = db;
+    window.firebaseReady = true;
+    console.log('Firebase initialized successfully');
+  </script>
 </head>
 <body>
 
-<!-- Header -->
 <header>
-  <!-- Animated Burger Button -->
   <button class="burger" aria-label="Menu" onclick="toggleMenu()">
-    <span></span>
-    <span></span>
-    <span></span>
+    <span></span><span></span><span></span>
   </button>
-
-  <!-- Logo Top-Right -->
   <div class="logo-container">
     <img src="images/logo.png" alt="PlayOn Logo" />
   </div>
 </header>
 
-<!-- Overlay -->
 <div id="menuOverlay" class="overlay" onclick="closeMenu()"></div>
 
-<!-- Side Menu -->
 <nav id="sideMenu" class="side-menu">
   <a href="index.html">Home</a>
   <a href="about.html">About</a>
   <a href="vacancies.html">Vacancies</a>
-  <a href="#">Login</a>
+  <a href="#" onclick="showLogin(event)">Login</a>
   <a href="manager-register.html">Register</a>
   <div class="menu-logo">
     <div class="logo-wrapper">
@@ -40,29 +58,55 @@
   </div>
 </nav>
 
-<!-- Hero Section for Form -->
-<!-- Hero Section for Form -->
 <section class="hero vacancy-hero">
   <h1>Add a Vacancy</h1>
-  <p>Managers can submit new vacancies here. They will appear on the Vacancies page.</p>
+  <p>Managers - submit new vacancies here. They will appear on the Vacancies page.</p>
 
   <div class="vacancy-form-container">
     <form id="vacancyForm">
-      <label for="club">Club</label>
-      <input type="text" id="club" placeholder="Club Name" required>
+      <label for="teamName">Team</label>
+      <select id="teamName" required>
+        <option value="">Loading teams...</option>
+      </select>
 
       <label for="position">Position</label>
-      <input type="text" id="position" placeholder="Position" required>
+      <select id="position" required>
+        <option value="">Select Position</option>
+        <option value="Goalkeeper">Goalkeeper</option>
+        <option value="Defender">Defender</option>
+        <option value="Midfielder">Midfielder</option>
+        <option value="Forward">Forward</option>
+      </select>
+
+      <label for="age">Age</label>
+      <select id="age" required>
+        <option value="">Select Age</option>
+        <option value="Under 7">Under 7</option>
+        <option value="Under 8">Under 8</option>
+        <option value="Under 9">Under 9</option>
+        <option value="Under 10">Under 10</option>
+        <option value="Under 11">Under 11</option>
+        <option value="Under 12">Under 12</option>
+        <option value="Under 13">Under 13</option>
+        <option value="Under 14">Under 14</option>
+        <option value="Under 15">Under 15</option>
+        <option value="Under 16">Under 16</option>
+        <option value="Adult">Adult</option>
+      </select>
 
       <label for="location">Location</label>
-      <input type="text" id="location" placeholder="Location" required>
+      <select id="location" required>
+        <option value="Stoke On Trent">Stoke on Trent</option>
+        <option value="Newcastle under Lyme">Newcastle under Lyme</option>
+        <option value="Staffordshire">Staffordshire</option>
+      </select>
 
       <label for="experience">Experience</label>
       <select id="experience" required>
         <option value="">Select experience</option>
-        <option value="Junior">Junior</option>
+        <option value="Beginner">Beginner</option>
         <option value="Intermediate">Intermediate</option>
-        <option value="Senior">Senior</option>
+        <option value="Advanced">Advanced</option>
       </select>
 
       <button type="submit">Add Vacancy</button>
@@ -71,8 +115,6 @@
   </div>
 </section>
 
-
-<!-- Footer -->
 <footer>
   <p>&copy; 2025 PlayOn. All rights reserved.</p>
   <p>
@@ -82,6 +124,7 @@
   </p>
 </footer>
 
+<!-- Menu Toggle Script (matches index.html) -->
 <script>
   const burger = document.querySelector('.burger');
   const sideMenu = document.getElementById('sideMenu');
@@ -92,45 +135,91 @@
 
     sideMenu.classList.toggle('open', isOpening);
     overlay.classList.toggle('active', isOpening);
-    burger.classList.toggle('open', isOpening); // animate burger to X
+    burger.classList.toggle('open', isOpening);
     document.body.classList.toggle('menu-open', isOpening);
   }
 
   function closeMenu() {
     sideMenu.classList.remove('open');
     overlay.classList.remove('active');
-    burger.classList.remove('open'); // reset burger icon
+    burger.classList.remove('open');
     document.body.classList.remove('menu-open');
   }
 
-  // Close menu when a link is clicked or ESC key pressed
+  // Close menu when a link is clicked
   document.addEventListener('DOMContentLoaded', function () {
     const links = sideMenu.querySelectorAll('a');
     links.forEach(link => link.addEventListener('click', closeMenu));
+  });
+</script>
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeMenu();
+<script src="js/login-popup.js"></script>
+
+<!-- Firebase Vacancy Logic -->
+<script type="module">
+  import { collection, addDoc, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Load teams
+    loadTeams();
+
+    // Form submit handling
+    const form = document.getElementById("vacancyForm");
+    const messageDiv = document.getElementById("message");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const vacancyData = {
+        club: document.getElementById("teamName").value,
+        position: document.getElementById("position").value,
+        age: document.getElementById("age").value,
+        location: document.getElementById("location").value,
+        experience: document.getElementById("experience").value,
+        timestamp: new Date()
+      };
+
+      try {
+        await addDoc(collection(window.db, "Vacancies"), vacancyData);
+        console.log("Vacancy saved to Firebase:", vacancyData);
+        messageDiv.textContent = "Vacancy added successfully!";
+        form.reset();
+      } catch (error) {
+        console.error("Error adding vacancy:", error);
+        messageDiv.textContent = "Error saving vacancy. Please try again.";
+      }
     });
   });
 
-  // Temporary local form handling
-  const form = document.getElementById("vacancyForm");
-  const messageDiv = document.getElementById("message");
+  // ===== Load teams from Firebase =====
+  async function loadTeams() {
+    const teamSelect = document.getElementById('teamName');
+    try {
+      if (!window.firebaseReady) {
+        setTimeout(loadTeams, 500);
+        return;
+      }
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const vacancyData = {
-      club: document.getElementById("club").value,
-      position: document.getElementById("position").value,
-      location: document.getElementById("location").value,
-      experience: document.getElementById("experience").value,
-      description: document.getElementById("description").value,
-      timestamp: new Date().toLocaleString()
-    };
-    console.log("Vacancy submitted:", vacancyData);
-    messageDiv.textContent = "Vacancy added successfully! (Check console)";
-    form.reset();
-  });
+      const teamsQuery = query(collection(window.db, 'teams'), orderBy('name'));
+      const querySnapshot = await getDocs(teamsQuery);
+
+      teamSelect.innerHTML = '<option value="">Select your team</option>';
+      querySnapshot.forEach((doc) => {
+        const team = doc.data();
+        if(team.name) {
+          const option = document.createElement('option');
+          option.value = team.name;
+          option.textContent = team.name;
+          teamSelect.appendChild(option);
+        }
+      });
+
+      console.log('Teams loaded successfully');
+    } catch (error) {
+      console.error('Error loading teams:', error);
+      teamSelect.innerHTML = '<option value="">Error loading teams. Please refresh.</option>';
+    }
+  }
 </script>
 
 </body>

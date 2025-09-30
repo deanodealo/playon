@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Update menu based on authentication state
-  function updateMenuForAuthState(user) {
+  async function updateMenuForAuthState(user) {
     const sideMenu = document.getElementById('sideMenu');
     if (!sideMenu) return;
 
@@ -184,10 +184,30 @@ document.addEventListener('DOMContentLoaded', function () {
     const registerLink = sideMenu.querySelector('a[href*="register"]');
     const logoutLink = sideMenu.querySelector('a[onclick*="handleLogout"]');
     const userInfo = sideMenu.querySelector('.user-info');
+    const myVacanciesLink = sideMenu.querySelector('a[href*="manager-vacancies"]');
 
     if (user) {
-      // User is logged in
-      console.log('User is logged in:', user.email);
+      // User is logged in - check if they're a manager
+      let isManager = false;
+      
+      try {
+        // Initialize Firestore if needed
+        if (!window.db) {
+          const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+          window.db = getFirestore();
+        }
+        
+        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const userDoc = await getDoc(doc(window.db, 'users', user.uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          isManager = userData.userType === 'manager';
+          console.log('User type:', userData.userType);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
 
       // Hide login and register links
       if (loginLink) loginLink.style.display = 'none';
@@ -204,11 +224,34 @@ document.addEventListener('DOMContentLoaded', function () {
           </div>
         `;
         
-        // Insert after the last navigation link
-        const lastNavLink = sideMenu.querySelector('a[href*="vacancies"]');
-        if (lastNavLink) {
-          lastNavLink.insertAdjacentElement('afterend', userInfoDiv);
+        // Insert after the vacancies link
+        const vacanciesLink = sideMenu.querySelector('a[href*="vacancies"]');
+        if (vacanciesLink) {
+          vacanciesLink.insertAdjacentElement('afterend', userInfoDiv);
         }
+      } else {
+        userInfo.style.display = 'block';
+      }
+
+      // Show "My Vacancies" link only for managers
+      if (isManager) {
+        if (!myVacanciesLink) {
+          const myVacanciesLinkEl = document.createElement('a');
+          myVacanciesLinkEl.href = 'manager-vacancies.html';
+          myVacanciesLinkEl.textContent = 'My Vacancies';
+          myVacanciesLinkEl.className = 'manager-link';
+          
+          // Insert after the vacancies link
+          const vacanciesLink = sideMenu.querySelector('a[href*="vacancies.html"]');
+          if (vacanciesLink) {
+            vacanciesLink.insertAdjacentElement('afterend', myVacanciesLinkEl);
+          }
+        } else {
+          myVacanciesLink.style.display = 'block';
+        }
+      } else {
+        // Hide for non-managers
+        if (myVacanciesLink) myVacanciesLink.style.display = 'none';
       }
 
       // Create or show logout link
@@ -236,7 +279,8 @@ document.addEventListener('DOMContentLoaded', function () {
       if (loginLink) loginLink.style.display = 'block';
       if (registerLink) registerLink.style.display = 'block';
 
-      // Hide logout link and user info
+      // Hide manager-specific links, logout link and user info
+      if (myVacanciesLink) myVacanciesLink.style.display = 'none';
       if (logoutLink) logoutLink.style.display = 'none';
       if (userInfo) userInfo.style.display = 'none';
     }

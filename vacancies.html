@@ -22,13 +22,14 @@
 <!-- Overlay -->
 <div id="menuOverlay" class="overlay" onclick="closeMenu()"></div>
 
-<!-- Overlay + Side Menu -->
+<!-- Side Menu -->
 <nav id="sideMenu" class="side-menu">
   <a href="index.html">Home</a>
   <a href="about.html">About</a>
   <a href="vacancies.html">Vacancies</a>
   <a href="#" onclick="showLogin(event)">Login</a>
   <a href="manager-register.html">Register</a>
+
   <div class="menu-logo">
     <div class="logo-wrapper">
       <img src="images/logo.png" alt="PlayOn Logo">
@@ -41,7 +42,6 @@
   <div class="login-form-container" onclick="event.stopPropagation()">
     <button class="login-close" onclick="closeLogin()" aria-label="Close">&times;</button>
     
-    <!-- Logo in popup -->
     <div class="login-logo">
       <div class="login-logo-wrapper">
         <img src="images/logo.png" alt="PlayOn Logo">
@@ -72,7 +72,6 @@
   </div>
 </div>
 
-
 <!-- Hero -->
 <section class="hero">
   <h1>Team Vacancies</h1>
@@ -88,41 +87,37 @@
     <select id="filterLocation"><option value="">All Locations</option></select>
     <select id="filterPosition">
       <option value="">All Positions</option>
-      <option>Goalkeeper</option><option>Defender</option>
-      <option>Midfielder</option><option>Striker</option>
+      <option>Goalkeeper</option>
+      <option>Defender</option>
+      <option>Midfielder</option>
+      <option>Striker</option>
+      <option>Forward</option>
     </select>
     <select id="filterExperience">
       <option value="">All Levels</option>
-      <option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+      <option>Beginner</option>
+      <option>Intermediate</option>
+      <option>Advanced</option>
     </select>
   </section>
 
   <!-- Vacancy Cards -->
-  <section class="vacancies">
-    <div class="vacancy-card">
-      <img src="images/hanleybadge2.png" alt="Team Logo"/>
-      <div>
-        <h3>FC Hanley U11</h3>
-        <p>⚡ Position: Striker</p>
-        <p>🎯 Experience: Intermediate</p>
-        <p>📍 Location: Stoke-on-Trent</p>
-      </div>
-    </div>
+  <section class="vacancies" id="vacancyList">
+    <!-- Vacancies will be injected here -->
   </section>
-  </main>
+</main>
 
+<!-- Footer -->
+<footer>
+  <p>&copy; 2025 PlayOn. All rights reserved.</p>
+  <p>
+    <a href="#">About</a> |
+    <a href="#">Contact</a> |
+    <a href="#">Privacy</a>
+  </p>
+</footer>
 
-  <!-- Footer -->
-  <footer>
-    <p>&copy; 2025 PlayOn. All rights reserved.</p>
-    <p>
-      <a href="#">About</a> |
-      <a href="#">Contact</a> |
-      <a href="#">Privacy</a>
-    </p>
-  </footer>
-
-
+<!-- Menu Toggle Script (matches index.html) -->
 <script>
   const burger = document.querySelector('.burger');
   const sideMenu = document.getElementById('sideMenu');
@@ -133,28 +128,144 @@
 
     sideMenu.classList.toggle('open', isOpening);
     overlay.classList.toggle('active', isOpening);
-    burger.classList.toggle('open', isOpening); // animate burger to X
+    burger.classList.toggle('open', isOpening);
     document.body.classList.toggle('menu-open', isOpening);
   }
 
   function closeMenu() {
     sideMenu.classList.remove('open');
     overlay.classList.remove('active');
-    burger.classList.remove('open'); // reset burger icon
+    burger.classList.remove('open');
     document.body.classList.remove('menu-open');
   }
 
-  // Close menu when a link is clicked or ESC key pressed
-// Close menu when a link is clicked
-document.addEventListener('DOMContentLoaded', function () {
-  const links = sideMenu.querySelectorAll('a');
-  links.forEach(link => link.addEventListener('click', closeMenu));
-});
-
+  // Close menu when a link is clicked
+  document.addEventListener('DOMContentLoaded', function () {
+    const links = sideMenu.querySelectorAll('a');
+    links.forEach(link => link.addEventListener('click', closeMenu));
+  });
 </script>
 
 <script src="js/login-popup.js"></script>
 
+<!-- Firebase & App Logic -->
+<script type="module">
+  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  // ===== Firebase Initialization =====
+  let app, auth, db;
+  if (!getApps().length) {
+    const firebaseConfig = {
+      apiKey: "AIzaSyAX9ivQ4aKQzokUMEkNpGTIbbAUMJhLlys",
+      authDomain: "playon-1a86b.firebaseapp.com",
+      projectId: "playon-1a86b",
+      storageBucket: "playon-1a86b.appspot.com",
+      messagingSenderId: "28141646391",
+      appId: "1:28141646391:web:98d83339ed46c17efa45b2",
+      measurementId: "G-Z12HWY8PFJ"
+    };
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApps()[0];
+  }
+
+  auth = getAuth(app);
+  db = getFirestore(app);
+  window.auth = auth;
+  window.db = db;
+  window.firebaseReady = true;
+
+  console.log('Firebase initialized');
+
+  // ===== Side Menu Login Status =====
+  const loginLink = document.querySelector('#sideMenu a[onclick*="showLogin"]');
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      loginLink.textContent = `Logout (${user.email})`;
+      loginLink.onclick = async () => {
+        await auth.signOut();
+        window.location.reload();
+      };
+    }
+  });
+
+  // ===== Load Vacancies on Page Load =====
+  document.addEventListener('DOMContentLoaded', () => {
+    loadVacancies();
+  });
+
+  // ===== Load Vacancies =====
+  async function loadVacancies() {
+    const vacancyContainer = document.getElementById('vacancyList');
+    const filterTeam = document.getElementById('filterTeam');
+    const filterLocation = document.getElementById('filterLocation');
+    const filterPosition = document.getElementById('filterPosition');
+    const filterExperience = document.getElementById('filterExperience');
+
+    try {
+      if (!window.firebaseReady) {
+        setTimeout(loadVacancies, 500);
+        return;
+      }
+
+      const querySnapshot = await getDocs(collection(db, 'Vacancies'));
+
+      vacancyContainer.innerHTML = '';
+      const teamsSet = new Set();
+      const locationsSet = new Set();
+
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const logoSrc = `images/teamLogos/${data.club.replace(/\s+/g, '')}.png`;
+
+        const card = document.createElement('div');
+        card.className = 'vacancy-card';
+        card.innerHTML = `
+          <img src="${logoSrc}" alt="${data.club} Logo"/>
+          <div>
+            <h3>${data.club || 'Unknown Team'}</h3>
+            <p>⚡ Position: ${data.position || '-'}</p>
+            <p>🎯 Experience: ${data.experience || '-'}</p>
+            <p>📍 Location: ${data.location || '-'}</p>
+            <p>👶 Age: ${data.age || '-'}</p>
+          </div>
+        `;
+        vacancyContainer.appendChild(card);
+
+        if (data.club) teamsSet.add(data.club);
+        if (data.location) locationsSet.add(data.location);
+      });
+
+      filterTeam.innerHTML = `<option value="">All Teams</option>` + [...teamsSet].map(t => `<option>${t}</option>`).join('');
+      filterLocation.innerHTML = `<option value="">All Locations</option>` + [...locationsSet].map(l => `<option>${l}</option>`).join('');
+
+      [filterTeam, filterLocation, filterPosition, filterExperience].forEach(select => {
+        select.addEventListener('change', () => {
+          const teamVal = filterTeam.value;
+          const locationVal = filterLocation.value;
+          const positionVal = filterPosition.value;
+          const expVal = filterExperience.value;
+
+          document.querySelectorAll('.vacancy-card').forEach(card => {
+            const text = card.innerText;
+            const show = (!teamVal || text.includes(teamVal)) &&
+                         (!locationVal || text.includes(locationVal)) &&
+                         (!positionVal || text.includes(positionVal)) &&
+                         (!expVal || text.includes(expVal));
+            card.style.display = show ? 'flex' : 'none';
+          });
+        });
+      });
+
+    } catch (err) {
+      console.error('Error loading vacancies:', err);
+      vacancyContainer.innerHTML = '<p>Error loading vacancies. Please refresh.</p>';
+    }
+  }
+
+</script>
+
 </body>
 </html>
-
