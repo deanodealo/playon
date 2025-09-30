@@ -111,7 +111,7 @@
 <footer>
   <p>&copy; 2025 PlayOn. All rights reserved.</p>
   <p>
-    <a href="#">About</a> |
+    <a href="about.html">About</a> |
     <a href="#">Contact</a> |
     <a href="#">Privacy</a>
   </p>
@@ -223,7 +223,7 @@
         const card = document.createElement('div');
         card.className = 'vacancy-card';
         card.innerHTML = `
-          <img src="${logoSrc}" alt="${data.club} Logo"/>
+          <img src="${logoSrc}" alt="${data.club} Logo" onerror="this.src='images/teamLogos/logo.png'"/>
           <div>
             <h3>${data.club || 'Unknown Team'}</h3>
             <p>⚡ Position: ${data.position || '-'}</p>
