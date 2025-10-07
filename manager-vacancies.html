@@ -72,6 +72,23 @@
       padding: 40px;
       color: #666;
     }
+
+    .auth-warning {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 800px;
+      text-align: center;
+      color: #856404;
+    }
+
+    .auth-warning a {
+      color: #1A2A44;
+      font-weight: bold;
+      text-decoration: underline;
+    }
   </style>
 
   <!-- Firebase SDK -->
@@ -126,11 +143,17 @@
   </div>
 </nav>
 
+<!-- Auth Warning (shown if not logged in) -->
+<div id="authWarning" class="auth-warning" style="display: none;">
+  ⚠️ You must be logged in to add or manage vacancies. 
+  <a href="#" onclick="showLogin(event)">Click here to login</a>
+</div>
+
 <section class="hero vacancy-hero">
   <h1>Manage your Vacancies</h1>
   <p>Managers - Add and Remove your Vacancies here. Added Vacancies will display on the Vacancies page.</p>
 
-  <div class="vacancy-form-container">
+  <div class="vacancy-form-container" id="vacancyFormContainer">
     <form id="vacancyForm">
       <label for="teamName">Team</label>
       <select id="teamName" required>
@@ -234,12 +257,33 @@
 <!-- Firebase Vacancy Logic -->
 <script type="module">
   import { collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
   let selectedTeam = '';
+  let currentUser = null;
 
   document.addEventListener('DOMContentLoaded', () => {
-    // Load teams
-    loadTeams();
+    // Check authentication status
+    if (!window.firebaseReady) {
+      setTimeout(() => window.location.reload(), 500);
+      return;
+    }
+
+    onAuthStateChanged(window.auth, (user) => {
+      currentUser = user;
+      
+      if (!user) {
+        // User not logged in - show warning and hide form
+        document.getElementById('authWarning').style.display = 'block';
+        document.getElementById('vacancyFormContainer').style.display = 'none';
+        document.getElementById('vacanciesList').innerHTML = '<p class="no-vacancies">Please log in to manage vacancies</p>';
+      } else {
+        // User logged in - hide warning and show form
+        document.getElementById('authWarning').style.display = 'none';
+        document.getElementById('vacancyFormContainer').style.display = 'block';
+        loadTeams();
+      }
+    });
   });
 
   // ===== Load teams from Firebase =====
@@ -283,20 +327,27 @@
     }
   }
 
-  // ===== Load current vacancies for selected team =====
+  // ===== Load current vacancies for selected team AND current manager =====
   async function loadCurrentVacancies(teamName) {
     const vacanciesList = document.getElementById('vacanciesList');
     vacanciesList.innerHTML = '<p class="loading">Loading vacancies...</p>';
 
+    if (!currentUser) {
+      vacanciesList.innerHTML = '<p class="no-vacancies">Please log in to view your vacancies</p>';
+      return;
+    }
+
     try {
+      // Query for vacancies matching BOTH the team AND the manager
       const vacanciesQuery = query(
         collection(window.db, 'Vacancies'),
-        where('club', '==', teamName)
+        where('club', '==', teamName),
+        where('managerId', '==', currentUser.uid)  // NEW: Filter by manager ID
       );
       const querySnapshot = await getDocs(vacanciesQuery);
 
       if (querySnapshot.empty) {
-        vacanciesList.innerHTML = '<p class="no-vacancies">No vacancies found for this team</p>';
+        vacanciesList.innerHTML = '<p class="no-vacancies">You have no vacancies for this team</p>';
         return;
       }
 
@@ -328,6 +379,11 @@
 
   // ===== Delete vacancy =====
   window.deleteVacancy = async function(vacancyId, teamName) {
+    if (!currentUser) {
+      alert('You must be logged in to delete vacancies');
+      return;
+    }
+
     const confirmDelete = confirm(`Are you sure you want to delete this vacancy for ${teamName}?`);
     
     if (!confirmDelete) {
@@ -363,12 +419,20 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    if (!currentUser) {
+      messageDiv.textContent = "You must be logged in to add vacancies";
+      messageDiv.style.color = 'red';
+      return;
+    }
+
     const vacancyData = {
       club: document.getElementById("teamName").value,
       position: document.getElementById("position").value,
       age: document.getElementById("age").value,
       location: document.getElementById("location").value,
       experience: document.getElementById("experience").value,
+      managerId: currentUser.uid,  // NEW: Store manager's user ID
+      managerEmail: currentUser.email,  // NEW: Store manager's email for reference
       timestamp: new Date()
     };
 

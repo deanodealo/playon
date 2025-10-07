@@ -6,6 +6,129 @@
   <title>Team Vacancies - PlayOn</title>
   <link rel="stylesheet" href="vacancies.css" />
   <link rel="stylesheet" href="index.css" />
+  <style>
+    /* Contact Manager Overlay */
+    .contact-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .contact-overlay.active {
+      display: flex;
+    }
+
+    .contact-modal {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .contact-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 30px;
+      cursor: pointer;
+      color: #666;
+      line-height: 1;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+    }
+
+    .contact-close:hover {
+      color: #000;
+    }
+
+    .contact-modal h2 {
+      color: #1A2A44;
+      margin-bottom: 10px;
+    }
+
+    .contact-modal .vacancy-details {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .contact-modal .vacancy-details strong {
+      color: #1A2A44;
+    }
+
+    .contact-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .contact-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      text-decoration: none;
+      color: #1A2A44;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .contact-btn:hover {
+      border-color: #1A2A44;
+      background: #f8f9fa;
+      transform: translateX(5px);
+    }
+
+    .contact-btn .icon {
+      font-size: 24px;
+      width: 30px;
+      text-align: center;
+    }
+
+    .contact-btn .label {
+      flex: 1;
+    }
+
+    .contact-btn .arrow {
+      color: #999;
+    }
+
+    .manager-info {
+      background: #e8f5e9;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .manager-info p {
+      margin: 5px 0;
+      color: #2e7d32;
+      font-weight: 500;
+    }
+  </style>
 </head>
 <body>
 
@@ -78,6 +201,29 @@
   <p>Browse open positions and join the right team for you.</p>
 </section>
 
+<!-- Contact Manager Overlay -->
+<div id="contactOverlay" class="contact-overlay" onclick="closeContactModal(event)">
+  <div class="contact-modal" onclick="event.stopPropagation()">
+    <button class="contact-close" onclick="closeContactModal()" aria-label="Close">&times;</button>
+    
+    <h2>Contact Manager</h2>
+    
+    <div class="manager-info" id="managerInfo">
+      <p><strong>Manager:</strong> <span id="managerNameDisplay">Loading...</span></p>
+      <p><strong>Team:</strong> <span id="teamNameDisplay">-</span></p>
+    </div>
+
+    <div class="vacancy-details" id="vacancyDetails">
+      <strong>Vacancy Details:</strong><br>
+      <span id="vacancyDetailsText">Loading...</span>
+    </div>
+
+    <div class="contact-options" id="contactOptions">
+      <!-- Contact buttons will be inserted here -->
+    </div>
+  </div>
+</div>
+
 <!-- Page Content -->
 <main class="container">
   <!-- Filters -->
@@ -85,6 +231,20 @@
     <h2>🔎 Filter Vacancies</h2>
     <select id="filterTeam"><option value="">All Teams</option></select>
     <select id="filterLocation"><option value="">All Locations</option></select>
+    <select id="filterAge">
+      <option value="">All Ages</option>
+      <option>Under 7</option>
+      <option>Under 8</option>
+      <option>Under 9</option>
+      <option>Under 10</option>
+      <option>Under 11</option>
+      <option>Under 12</option>
+      <option>Under 13</option>
+      <option>Under 14</option>
+      <option>Under 15</option>
+      <option>Under 16</option>
+      <option>Adult</option>
+    </select>
     <select id="filterPosition">
       <option value="">All Positions</option>
       <option>Goalkeeper</option>
@@ -152,7 +312,7 @@
 <script type="module">
   import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
   import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+  import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
   // ===== Firebase Initialization =====
   let app, auth, db;
@@ -196,7 +356,7 @@
     loadVacancies();
   });
 
-  // ===== Load Vacancies =====
+  // ===== Load ALL Vacancies (Public View) =====
   async function loadVacancies() {
     const vacancyContainer = document.getElementById('vacancyList');
     const filterTeam = document.getElementById('filterTeam');
@@ -210,26 +370,31 @@
         return;
       }
 
+      // Load ALL vacancies - no filtering by managerId on public page
       const querySnapshot = await getDocs(collection(db, 'Vacancies'));
 
       vacancyContainer.innerHTML = '';
       const teamsSet = new Set();
       const locationsSet = new Set();
 
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
+      querySnapshot.forEach(docSnapshot => {
+        const data = docSnapshot.data();
+        const vacancyId = docSnapshot.id;
         const logoSrc = `images/teamLogos/${data.club.replace(/\s+/g, '')}.png`;
 
         const card = document.createElement('div');
         card.className = 'vacancy-card';
         card.innerHTML = `
           <img src="${logoSrc}" alt="${data.club} Logo" onerror="this.src='images/teamLogos/logo.png'"/>
-          <div>
+          <div style="flex: 1;">
             <h3>${data.club || 'Unknown Team'}</h3>
             <p>⚡ Position: ${data.position || '-'}</p>
             <p>🎯 Experience: ${data.experience || '-'}</p>
             <p>📍 Location: ${data.location || '-'}</p>
             <p>👶 Age: ${data.age || '-'}</p>
+            <button class="contact-manager-btn" onclick="openContactModal('${vacancyId}', '${data.managerId || ''}', '${data.club}', '${data.position}', '${data.age}')">
+              Contact Manager
+            </button>
           </div>
         `;
         vacancyContainer.appendChild(card);
@@ -238,13 +403,17 @@
         if (data.location) locationsSet.add(data.location);
       });
 
+      // Populate filter dropdowns
       filterTeam.innerHTML = `<option value="">All Teams</option>` + [...teamsSet].map(t => `<option>${t}</option>`).join('');
       filterLocation.innerHTML = `<option value="">All Locations</option>` + [...locationsSet].map(l => `<option>${l}</option>`).join('');
 
-      [filterTeam, filterLocation, filterPosition, filterExperience].forEach(select => {
+      // Add filter event listeners
+      const filterAge = document.getElementById('filterAge');
+      [filterTeam, filterLocation, filterAge, filterPosition, filterExperience].forEach(select => {
         select.addEventListener('change', () => {
           const teamVal = filterTeam.value;
           const locationVal = filterLocation.value;
+          const ageVal = filterAge.value;
           const positionVal = filterPosition.value;
           const expVal = filterExperience.value;
 
@@ -252,6 +421,7 @@
             const text = card.innerText;
             const show = (!teamVal || text.includes(teamVal)) &&
                          (!locationVal || text.includes(locationVal)) &&
+                         (!ageVal || text.includes(ageVal)) &&
                          (!positionVal || text.includes(positionVal)) &&
                          (!expVal || text.includes(expVal));
             card.style.display = show ? 'flex' : 'none';
@@ -264,6 +434,123 @@
       vacancyContainer.innerHTML = '<p>Error loading vacancies. Please refresh.</p>';
     }
   }
+
+  // ===== Open Contact Modal =====
+  window.openContactModal = async function(vacancyId, managerId, teamName, position, age) {
+    const overlay = document.getElementById('contactOverlay');
+    const managerNameDisplay = document.getElementById('managerNameDisplay');
+    const teamNameDisplay = document.getElementById('teamNameDisplay');
+    const vacancyDetailsText = document.getElementById('vacancyDetailsText');
+    const contactOptions = document.getElementById('contactOptions');
+
+    // Show overlay immediately
+    overlay.classList.add('active');
+    
+    // Set vacancy details
+    teamNameDisplay.textContent = teamName;
+    vacancyDetailsText.textContent = `${position} • ${age}`;
+
+    // Check if managerId exists
+    if (!managerId) {
+      managerNameDisplay.textContent = 'Not Available';
+      contactOptions.innerHTML = '<p style="color: #999; text-align: center;">Contact information not available for this vacancy.</p>';
+      return;
+    }
+
+    // Show loading state
+    managerNameDisplay.textContent = 'Loading...';
+    contactOptions.innerHTML = '<p style="color: #999; text-align: center;">Loading contact options...</p>';
+
+    try {
+      // Fetch manager profile from Firestore
+      const managerDoc = await getDoc(doc(db, 'managerProfiles', managerId));
+      
+      if (!managerDoc.exists()) {
+        managerNameDisplay.textContent = 'Not Available';
+        contactOptions.innerHTML = '<p style="color: #999; text-align: center;">Manager profile not found.</p>';
+        return;
+      }
+
+      const managerData = managerDoc.data();
+      const managerName = managerData.managerName || 'Manager';
+      const email = managerData.email || '';
+      const phone = managerData.phone || '';
+
+      // Display manager name
+      managerNameDisplay.textContent = managerName;
+
+      // Pre-filled message for SMS and WhatsApp
+      const message = `Hi ${managerName}, I'm interested in the ${position} vacancy for ${teamName} ${age}. Can we discuss this opportunity?`;
+      const encodedMessage = encodeURIComponent(message);
+
+      // Build contact options
+      let contactHTML = '';
+
+      if (email) {
+        const mailtoLink = `mailto:${email}?subject=Interested in ${position} vacancy - ${teamName}&body=${encodedMessage}`;
+        contactHTML += `
+          <a href="${mailtoLink}" class="contact-btn">
+            <span class="icon">📧</span>
+            <span class="label">Send Email</span>
+            <span class="arrow">→</span>
+          </a>
+        `;
+      }
+
+      if (phone) {
+        const cleanPhone = phone.replace(/\s+/g, '');
+        
+        contactHTML += `
+          <a href="tel:${cleanPhone}" class="contact-btn">
+            <span class="icon">📞</span>
+            <span class="label">Call Manager</span>
+            <span class="arrow">→</span>
+          </a>
+        `;
+
+        contactHTML += `
+          <a href="sms:${cleanPhone}?&body=${encodedMessage}" class="contact-btn">
+            <span class="icon">💬</span>
+            <span class="label">Send Text Message</span>
+            <span class="arrow">→</span>
+          </a>
+        `;
+
+        // WhatsApp link (remove leading 0 and add country code if needed)
+        let whatsappPhone = cleanPhone;
+        if (whatsappPhone.startsWith('0')) {
+          whatsappPhone = '44' + whatsappPhone.substring(1); // UK country code
+        }
+        
+        contactHTML += `
+          <a href="https://wa.me/${whatsappPhone}?text=${encodedMessage}" target="_blank" class="contact-btn">
+            <span class="icon">💚</span>
+            <span class="label">WhatsApp Message</span>
+            <span class="arrow">→</span>
+          </a>
+        `;
+      }
+
+      if (!email && !phone) {
+        contactHTML = '<p style="color: #999; text-align: center;">No contact information available.</p>';
+      }
+
+      contactOptions.innerHTML = contactHTML;
+
+    } catch (error) {
+      console.error('Error fetching manager profile:', error);
+      managerNameDisplay.textContent = 'Error';
+      contactOptions.innerHTML = '<p style="color: #dc3545; text-align: center;">Error loading contact information.</p>';
+    }
+  };
+
+  // ===== Close Contact Modal =====
+  window.closeContactModal = function(event) {
+    if (event && event.target.id !== 'contactOverlay' && event.currentTarget !== event.target) {
+      return;
+    }
+    document.getElementById('contactOverlay').classList.remove('active');
+  };
 
 </script>
 

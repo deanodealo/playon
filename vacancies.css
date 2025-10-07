@@ -313,3 +313,23 @@ footer a:hover {
   height: auto;
   display: block;
 }
+/* Add to vacancies.css */
+.contact-manager-btn {
+  margin-top: 15px;
+  background: #1A2A44;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.contact-manager-btn:hover {
+  background: #2d4263;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(26, 42, 68, 0.3);
+}
