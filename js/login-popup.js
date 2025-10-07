@@ -318,12 +318,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const user = userCredential.user;
         
         showMessage('Login successful!', 'success');
-        console.log('User logged in:', user.uid);
-        
-        setTimeout(() => {
-          window.closeLogin();
-          // Don't reload - auth state listener will update the menu
-        }, 1500);
+console.log('User logged in:', user.uid);
+
+setTimeout(() => {
+  window.closeLogin();
+  window.location.reload(); // Reload page to refresh all content
+}, 1500);
         
       } catch (error) {
         console.error('Login error:', error);

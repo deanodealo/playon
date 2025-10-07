@@ -338,5 +338,13 @@ footer a {
   position: relative;
   z-index: 1;
 }
+.feature-card {
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
 
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
 

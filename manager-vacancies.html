@@ -143,10 +143,45 @@
   </div>
 </nav>
 
+<!-- Login Popup Overlay -->
+<div id="loginOverlay" class="login-overlay" onclick="closeLogin(event)">
+  <div class="login-form-container" onclick="event.stopPropagation()">
+    <button class="login-close" onclick="closeLogin()" aria-label="Close">&times;</button>
+    
+    <div class="login-logo">
+      <div class="login-logo-wrapper">
+        <img src="images/logo.png" alt="PlayOn Logo">
+      </div>
+    </div>
+
+    <form class="login-form" id="loginForm">
+      <h2>Welcome Back</h2>
+      
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" required>
+      
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" required>
+      
+      <button type="submit" id="loginBtn">Login</button>
+      
+      <div class="forgot-password">
+        <a href="#" onclick="forgotPassword(event)">Forgot Password?</a>
+      </div>
+      
+      <div id="loginMessage" class="login-message"></div>
+      
+      <div class="register-link">
+        Don't have an account? <a href="manager-register.html">Register here</a>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Auth Warning (shown if not logged in) -->
 <div id="authWarning" class="auth-warning" style="display: none;">
   ⚠️ You must be logged in to add or manage vacancies. 
-  <a href="#" onclick="showLogin(event)">Click here to login</a>
+  <a href="#" onclick="event.preventDefault(); showLogin(event);">Click here to login</a>
 </div>
 
 <section class="hero vacancy-hero">

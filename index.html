@@ -110,17 +110,32 @@
 
   <!-- Features -->
   <section class="features">
-    <div class="feature-card">
-      <h3>🔍 Player Search</h3>
-      <p>Search by Age, Location & Experience</p>
-    </div>
-    <div class="feature-card">
-      <h3>🏆 Find Teams</h3>
-      <p>Players can join teams that match their age, skill, and location.</p>
-    </div>
+    <div class="feature-card" onclick="handleAddVacanciesClick()" style="cursor: pointer;">
+  <h3>🔍 Add Vacancies</h3>
+  <p>Managers - add your team vacancies by Position, Age & Experience</p>
+</div>
+
+<script>
+  function handleAddVacanciesClick() {
+    if (window.auth && window.auth.currentUser) {
+      // User is logged in
+      window.location.href = 'manager-vacancies.html';
+    } else {
+      // User is logged out - show login popup
+      showLogin(event);
+    }
+  }
+</script>
+    <a href="vacancies.html" style="text-decoration: none; color: inherit;">
+  <div class="feature-card">
+    <h3>🏆 Find Teams</h3>
+    <p>Players - join teams that match your Age, Experience and Location.</p>
+  </div>
+</a>
     <div class="feature-card">
       <h3>🎓 Find Coaches</h3>
       <p>Coaches looking for teams, or teams seeking the right coach.</p>
+      <p>COMING SOON!</p>
     </div>
     <div class="feature-card">
       <h3>
@@ -128,6 +143,7 @@
         Find Refs
       </h3>
       <p>Connect with referees for your next match or tournament.</p>
+      <p>COMING SOON!</p>
     </div>
   </section>
 
