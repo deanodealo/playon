@@ -177,7 +177,6 @@ header img {
   line-height: 1.6;
   color: #333;
 }
-
 /* ===== Roles Section ===== */
 .roles .container {
   display: flex;
@@ -185,6 +184,8 @@ header img {
   justify-content: center;
   gap: 2rem;
   padding: 3rem 1.5rem;
+  max-width: 1400px; /* Add max-width to keep cards from spreading too wide */
+  margin: 0 auto; /* Center the container itself */
 }
 
 .roles .card {
@@ -192,8 +193,9 @@ header img {
   border-radius: 1rem;
   box-shadow: 0 6px 15px rgba(0,0,0,0.1);
   padding: 2rem;
-  max-width: 350px;
-  flex: 1 1 300px;
+  width: calc(50% - 1rem); /* 2 cards per row with gap considered */
+  min-width: 280px; /* Minimum width before wrapping */
+  max-width: 350px; /* Maximum width */
   text-align: center;
   transition: transform 0.2s ease;
 }
@@ -214,6 +216,13 @@ header img {
   line-height: 1.5;
 }
 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .roles .card {
+    width: 100%; /* Stack cards on mobile */
+    max-width: 400px;
+  }
+}
 /* Button container */
 .roles .btn-container {
   margin-top: 1rem;

@@ -1,24 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Team Vacancies - PlayOn</title>
-  <link rel="stylesheet" href="vacancies.css" />
-  <link rel="stylesheet" href="index.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vacancies - PlayOn</title>
+  <link rel="stylesheet" href="index.css">
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAX9ivQ4aKQzokUMEkNpGTIbbAUMJhLlys",
+      authDomain: "playon-1a86b.firebaseapp.com",
+      projectId: "playon-1a86b",
+      storageBucket: "playon-1a86b.firebasestorage.app",
+      messagingSenderId: "28141646391",
+      appId: "1:28141646391:web:98d83339ed46c17efa45b2",
+      measurementId: "G-Z12HWY8PFJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    window.db = db;
+    window.firebaseReady = true;
+    console.log('Firebase initialized successfully');
+  </script>
+
   <style>
-    /* Contact Manager Overlay */
+    .vacancy-tabs {
+      display: flex;
+      gap: 10px;
+      margin: 2rem auto;
+      max-width: 1200px;
+      padding: 0 20px;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 15px 30px;
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .tab-button:hover {
+      border-color: #27AE60;
+      color: #27AE60;
+    }
+
+    .tab-button.active {
+      background: #27AE60;
+      border-color: #27AE60;
+      color: white;
+    }
+
+    .tab-button .count {
+      background: rgba(0,0,0,0.1);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+    }
+
+    .tab-button.active .count {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .filters {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .filter-item label {
+      font-weight: 600;
+      color: #1A2A44;
+      font-size: 0.9rem;
+    }
+
+    .filter-item select {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: 'Poppins', Arial, sans-serif;
+      background: white;
+      cursor: pointer;
+    }
+
+    .filter-item select:focus {
+      outline: none;
+      border-color: #27AE60;
+    }
+
+    .clear-filters {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      color: #666;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .clear-filters:hover {
+      background: #e9ecef;
+      border-color: #27AE60;
+      color: #27AE60;
+    }
+
+    .vacancies-grid {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .vacancy-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .vacancy-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .club-logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 15px;
+      height: 80px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .club-logo {
+      max-width: 100%;
+      max-height: 80px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .vacancy-type-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .badge-player {
+      background: #E3F2FD;
+      color: #1976D2;
+      display: none; /* Hidden for player vacancies since we show logo */
+    }
+
+    .badge-coach {
+      background: #FFF3E0;
+      color: #F57C00;
+    }
+
+    .vacancy-card h3 {
+      color: #1A2A44;
+      margin: 10px 0;
+      font-size: 1.3rem;
+    }
+
+    .vacancy-card .team-name {
+      color: #27AE60;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .vacancy-details {
+      margin: 15px 0;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .vacancy-details p {
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .vacancy-details .icon {
+      min-width: 20px;
+    }
+
+    .contact-button {
+      width: 100%;
+      padding: 12px;
+      background: #27AE60;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 15px;
+    }
+
+    .contact-button:hover {
+      background: #219653;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+      grid-column: 1 / -1;
+    }
+
+    .empty-state h3 {
+      color: #1A2A44;
+      margin-bottom: 10px;
+    }
+
+    /* Contact Overlay Styles */
     .contact-overlay {
       display: none;
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      right: 0;
+      bottom: 0;
       background: rgba(0, 0, 0, 0.7);
-      z-index: 9999;
-      align-items: center;
+      z-index: 10000;
       justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.3s;
     }
 
     .contact-overlay.active {
@@ -27,14 +286,31 @@
 
     .contact-modal {
       background: white;
-      border-radius: 15px;
+      border-radius: 16px;
       padding: 30px;
       max-width: 500px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
       position: relative;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     .contact-close {
@@ -43,96 +319,170 @@
       right: 15px;
       background: none;
       border: none;
-      font-size: 30px;
-      cursor: pointer;
+      font-size: 2rem;
       color: #666;
-      line-height: 1;
-      padding: 0;
-      width: 30px;
-      height: 30px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s;
     }
 
     .contact-close:hover {
-      color: #000;
+      background: #f0f0f0;
+      color: #333;
     }
 
     .contact-modal h2 {
       color: #1A2A44;
-      margin-bottom: 10px;
-    }
-
-    .contact-modal .vacancy-details {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 25px;
-      font-size: 14px;
-      color: #666;
-    }
-
-    .contact-modal .vacancy-details strong {
-      color: #1A2A44;
-    }
-
-    .contact-options {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .contact-btn {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 15px 20px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      background: white;
-      cursor: pointer;
-      text-decoration: none;
-      color: #1A2A44;
-      font-size: 16px;
-      font-weight: 500;
-      transition: all 0.3s;
-    }
-
-    .contact-btn:hover {
-      border-color: #1A2A44;
-      background: #f8f9fa;
-      transform: translateX(5px);
-    }
-
-    .contact-btn .icon {
-      font-size: 24px;
-      width: 30px;
+      margin: 0 0 25px 0;
+      font-size: 1.8rem;
       text-align: center;
     }
 
-    .contact-btn .label {
-      flex: 1;
+    .contact-info {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
     }
 
-    .contact-btn .arrow {
-      color: #999;
+    .contact-detail {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #e0e0e0;
     }
 
-    .manager-info {
-      background: #e8f5e9;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+    .contact-detail:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
     }
 
-    .manager-info p {
-      margin: 5px 0;
-      color: #2e7d32;
-      font-weight: 500;
+    .contact-detail strong {
+      color: #1A2A44;
+      font-size: 1rem;
+    }
+
+    .contact-detail span {
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .contact-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .contact-option-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      gap: 10px;
+      min-height: 100px;
+    }
+
+    .contact-option-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .contact-option-btn.email {
+      border-color: #3498db;
+      color: #3498db;
+    }
+
+    .contact-option-btn.email:hover {
+      background: #3498db;
+      color: white;
+    }
+
+    .contact-option-btn.phone {
+      border-color: #27AE60;
+      color: #27AE60;
+    }
+
+    .contact-option-btn.phone:hover {
+      background: #27AE60;
+      color: white;
+    }
+
+    .contact-option-btn.sms {
+      border-color: #9b59b6;
+      color: #9b59b6;
+    }
+
+    .contact-option-btn.sms:hover {
+      background: #9b59b6;
+      color: white;
+    }
+
+    .contact-option-btn.whatsapp {
+      border-color: #25D366;
+      color: #25D366;
+    }
+
+    .contact-option-btn.whatsapp:hover {
+      background: #25D366;
+      color: white;
+    }
+
+    .contact-icon {
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .contact-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    @media(max-width: 768px) {
+      .vacancy-tabs {
+        flex-direction: column;
+      }
+
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .vacancies-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .contact-modal {
+        padding: 20px;
+      }
+
+      .contact-options {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-option-btn {
+        min-height: 80px;
+      }
     }
   </style>
 </head>
 <body>
 
-<!-- Header -->
 <header>
   <button class="burger" aria-label="Menu" onclick="toggleMenu()">
     <span></span><span></span><span></span>
@@ -142,7 +492,6 @@
   </div>
 </header>
 
-<!-- Overlay -->
 <div id="menuOverlay" class="overlay" onclick="closeMenu()"></div>
 
 <!-- Side Menu -->
@@ -150,9 +499,9 @@
   <a href="index.html">Home</a>
   <a href="about.html">About</a>
   <a href="vacancies.html">Vacancies</a>
+  <!--<a href="referees.html">Find a Ref</a>-->
   <a href="#" onclick="showLogin(event)">Login</a>
-  <a href="manager-register.html">Register</a>
-
+  <a href="register.html">Register</a>
   <div class="menu-logo">
     <div class="logo-wrapper">
       <img src="images/logo.png" alt="PlayOn Logo">
@@ -160,11 +509,225 @@
   </div>
 </nav>
 
+<section class="hero">
+  <h1>Current Vacancies</h1>
+  <p>Find your next opportunity in grassroots football</p>
+</section>
+
+<!-- Tabs -->
+<div class="vacancy-tabs">
+  <button class="tab-button active" onclick="switchTab('players')" id="playersTab">
+    <span>Player Vacancies</span>
+    <span class="count" id="playerCount">0</span>
+  </button>
+  <button class="tab-button" onclick="switchTab('coaches')" id="coachesTab">
+    <span>Coach/Manager Vacancies</span>
+    <span class="count" id="coachCount">0</span>
+  </button>
+</div>
+
+<!-- Player Vacancies Tab -->
+<div id="playersContent" class="tab-content active">
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-grid">
+      <div class="filter-item">
+        <label for="playerTeamFilter">Team</label>
+        <select id="playerTeamFilter" onchange="filterPlayers()">
+          <option value="">All Teams</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="playerLocationFilter">Location</label>
+        <select id="playerLocationFilter" onchange="filterPlayers()">
+          <option value="">All Locations</option>
+          <option value="Stoke On Trent">Stoke on Trent</option>
+          <option value="Newcastle under Lyme">Newcastle under Lyme</option>
+          <option value="Staffordshire">Staffordshire</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="playerAgeFilter">Age Group</label>
+        <select id="playerAgeFilter" onchange="filterPlayers()">
+          <option value="">All Ages</option>
+          <option value="U7">Under 7</option>
+          <option value="U8">Under 8</option>
+          <option value="U9">Under 9</option>
+          <option value="U10">Under 10</option>
+          <option value="U11">Under 11</option>
+          <option value="U12">Under 12</option>
+          <option value="U13">Under 13</option>
+          <option value="U14">Under 14</option>
+          <option value="U15">Under 15</option>
+          <option value="U16">Under 16</option>
+          <option value="U17">Under 17</option>
+          <option value="U18">Under 18</option>
+          <option value="Adult">Adult</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="playerPositionFilter">Position</label>
+        <select id="playerPositionFilter" onchange="filterPlayers()">
+          <option value="">All Positions</option>
+          <option value="Goalkeeper">Goalkeeper</option>
+          <option value="Defender">Defender</option>
+          <option value="Midfielder">Midfielder</option>
+          <option value="Forward">Forward</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="playerExperienceFilter">Experience</label>
+        <select id="playerExperienceFilter" onchange="filterPlayers()">
+          <option value="">All Levels</option>
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
+      </div>
+    </div>
+    <button class="clear-filters" onclick="clearPlayerFilters()">Clear All Filters</button>
+  </div>
+
+  <!-- Player Vacancies Grid -->
+  <div class="vacancies-grid" id="playerVacancies">
+    <div class="empty-state">
+      <h3>Loading player vacancies...</h3>
+      <p>Please wait while we fetch the latest opportunities</p>
+    </div>
+  </div>
+</div>
+
+<!-- Coach Vacancies Tab -->
+<div id="coachesContent" class="tab-content">
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-grid">
+      <div class="filter-item">
+        <label for="coachTeamFilter">Team/Club</label>
+        <select id="coachTeamFilter" onchange="filterCoaches()">
+          <option value="">All Teams/Clubs</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="coachLocationFilter">Location</label>
+        <select id="coachLocationFilter" onchange="filterCoaches()">
+          <option value="">All Locations</option>
+          <option value="Stoke On Trent">Stoke on Trent</option>
+          <option value="Newcastle under Lyme">Newcastle under Lyme</option>
+          <option value="Staffordshire">Staffordshire</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="coachAgeFilter">Age Group</label>
+        <select id="coachAgeFilter" onchange="filterCoaches()">
+          <option value="">All Levels</option>
+          <option value="U7">Under 7</option>
+          <option value="U8">Under 8</option>
+          <option value="U9">Under 9</option>
+          <option value="U10">Under 10</option>
+          <option value="U11">Under 11</option>
+          <option value="U12">Under 12</option>
+          <option value="U13">Under 13</option>
+          <option value="U14">Under 14</option>
+          <option value="U15">Under 15</option>
+          <option value="U16">Under 16</option>
+          <option value="U17">Under 17</option>
+          <option value="U18">Under 18</option>
+          <option value="Adult">Adult</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="coachPositionFilter">Position</label>
+        <select id="coachPositionFilter" onchange="filterCoaches()">
+          <option value="">All Positions</option>
+          <option value="Manager">Manager</option>
+          <option value="Head Coach">Head Coach</option>
+          <option value="Assistant Coach">Assistant Coach</option>
+          <option value="Coach">Coach</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="coachExperienceFilter">Experience Required</label>
+        <select id="coachExperienceFilter" onchange="filterCoaches()">
+          <option value="">All Levels</option>
+          <option value="Beginner">Beginner Welcome</option>
+          <option value="Some Experience">Some Experience</option>
+          <option value="Experienced">Experienced</option>
+        </select>
+      </div>
+    </div>
+    <button class="clear-filters" onclick="clearCoachFilters()">Clear All Filters</button>
+  </div>
+
+  <!-- Coach Vacancies Grid -->
+  <div class="vacancies-grid" id="coachVacancies">
+    <div class="empty-state">
+      <h3>Loading coach vacancies...</h3>
+      <p>Please wait while we fetch the latest opportunities</p>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Manager Overlay -->
+<div id="contactOverlay" class="contact-overlay" onclick="closeContactOverlay(event)">
+  <div class="contact-modal" onclick="event.stopPropagation()">
+    <button class="contact-close" onclick="closeContactOverlay()" aria-label="Close">&times;</button>
+    
+    <h2>Contact Manager</h2>
+    
+    <div class="contact-info">
+      <div class="contact-detail">
+        <strong>Manager:</strong>
+        <span id="contactManagerName">-</span>
+      </div>
+      <div class="contact-detail">
+        <strong>Team:</strong>
+        <span id="contactTeamName">-</span>
+      </div>
+    </div>
+
+    <div class="contact-options">
+      <button class="contact-option-btn email" id="emailBtn" onclick="sendEmail()">
+        <span class="contact-icon">📧</span>
+        <span class="contact-label">Send Email</span>
+      </button>
+
+      <button class="contact-option-btn phone" id="callBtn" onclick="callManager()">
+        <span class="contact-icon">📱</span>
+        <span class="contact-label">Call Manager</span>
+      </button>
+
+      <button class="contact-option-btn sms" id="smsBtn" onclick="sendSMS()">
+        <span class="contact-icon">💬</span>
+        <span class="contact-label">Send Text Message</span>
+      </button>
+
+      <button class="contact-option-btn whatsapp" id="whatsappBtn" onclick="sendWhatsApp()">
+        <span class="contact-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+          </svg>
+        </span>
+        <span class="contact-label">WhatsApp Message</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Login Popup Overlay -->
 <div id="loginOverlay" class="login-overlay" onclick="closeLogin(event)">
   <div class="login-form-container" onclick="event.stopPropagation()">
     <button class="login-close" onclick="closeLogin()" aria-label="Close">&times;</button>
     
+    <!-- Logo in popup -->
     <div class="login-logo">
       <div class="login-logo-wrapper">
         <img src="images/logo.png" alt="PlayOn Logo">
@@ -189,85 +752,13 @@
       <div id="loginMessage" class="login-message"></div>
       
       <div class="register-link">
-        Don't have an account? <a href="manager-register.html">Register here</a>
+        Don't have an account? <a href="register.html">Register here</a>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Hero -->
-<section class="hero">
-  <h1>Team Vacancies</h1>
-  <p>Players - Browse open positions and join the right team for you</p>
-</section>
 
-<!-- Contact Manager Overlay -->
-<div id="contactOverlay" class="contact-overlay" onclick="closeContactModal(event)">
-  <div class="contact-modal" onclick="event.stopPropagation()">
-    <button class="contact-close" onclick="closeContactModal()" aria-label="Close">&times;</button>
-    
-    <h2>Contact Manager</h2>
-    
-    <div class="manager-info" id="managerInfo">
-      <p><strong>Manager:</strong> <span id="managerNameDisplay">Loading...</span></p>
-      <p><strong>Team:</strong> <span id="teamNameDisplay">-</span></p>
-    </div>
-
-    <div class="vacancy-details" id="vacancyDetails">
-      <strong>Vacancy Details:</strong><br>
-      <span id="vacancyDetailsText">Loading...</span>
-    </div>
-
-    <div class="contact-options" id="contactOptions">
-      <!-- Contact buttons will be inserted here -->
-    </div>
-  </div>
-</div>
-
-<!-- Page Content -->
-<main class="container">
-  <!-- Filters -->
-  <section class="card filters">
-    <h2>🔎 Filter Vacancies</h2>
-    <select id="filterTeam"><option value="">All Teams</option></select>
-    <select id="filterLocation"><option value="">All Locations</option></select>
-    <select id="filterAge">
-      <option value="">All Ages</option>
-      <option>Under 7</option>
-      <option>Under 8</option>
-      <option>Under 9</option>
-      <option>Under 10</option>
-      <option>Under 11</option>
-      <option>Under 12</option>
-      <option>Under 13</option>
-      <option>Under 14</option>
-      <option>Under 15</option>
-      <option>Under 16</option>
-      <option>Adult</option>
-    </select>
-    <select id="filterPosition">
-      <option value="">All Positions</option>
-      <option>Goalkeeper</option>
-      <option>Defender</option>
-      <option>Midfielder</option>
-      <option>Striker</option>
-      <option>Forward</option>
-    </select>
-    <select id="filterExperience">
-      <option value="">All Levels</option>
-      <option>Beginner</option>
-      <option>Intermediate</option>
-      <option>Advanced</option>
-    </select>
-  </section>
-
-  <!-- Vacancy Cards -->
-  <section class="vacancies" id="vacancyList">
-    <!-- Vacancies will be injected here -->
-  </section>
-</main>
-
-<!-- Footer -->
 <footer>
   <p>&copy; 2025 PlayOn. All rights reserved.</p>
   <p>
@@ -278,282 +769,445 @@
   </p>
 </footer>
 
-<!-- Menu Toggle Script (matches index.html) -->
 <script>
-  const burger = document.querySelector('.burger');
-  const sideMenu = document.getElementById('sideMenu');
-  const overlay = document.getElementById('menuOverlay');
+const burger = document.querySelector('.burger');
+const sideMenu = document.getElementById('sideMenu');
+const overlay = document.getElementById('menuOverlay');
 
-  function toggleMenu() {
-    const isOpening = !sideMenu.classList.contains('open');
+function toggleMenu() {
+  const isOpening = !sideMenu.classList.contains('open');
+  sideMenu.classList.toggle('open', isOpening);
+  overlay.classList.toggle('active', isOpening);
+  burger.classList.toggle('open', isOpening);
+  document.body.classList.toggle('menu-open', isOpening);
+}
 
-    sideMenu.classList.toggle('open', isOpening);
-    overlay.classList.toggle('active', isOpening);
-    burger.classList.toggle('open', isOpening);
-    document.body.classList.toggle('menu-open', isOpening);
+function closeMenu() {
+  sideMenu.classList.remove('open');
+  overlay.classList.remove('active');
+  burger.classList.remove('open');
+  document.body.classList.remove('menu-open');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const links = sideMenu.querySelectorAll('a');
+  links.forEach(link => link.addEventListener('click', closeMenu));
+});
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+  if (tab === 'players') {
+    document.getElementById('playersTab').classList.add('active');
+    document.getElementById('playersContent').classList.add('active');
+  } else {
+    document.getElementById('coachesTab').classList.add('active');
+    document.getElementById('coachesContent').classList.add('active');
+  }
+}
+
+// Store all vacancies and unique teams
+let allPlayerVacancies = [];
+let allCoachVacancies = [];
+
+// Store current contact details
+let currentContact = {
+  email: '',
+  phone: '',
+  name: '',
+  teamName: '',
+  position: ''
+};
+
+// Load vacancies on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadPlayerVacancies();
+  loadCoachVacancies();
+});
+
+// Load Player Vacancies
+async function loadPlayerVacancies() {
+  try {
+    if (!window.firebaseReady) {
+      setTimeout(loadPlayerVacancies, 500);
+      return;
+    }
+
+    const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    
+    const vacanciesQuery = query(collection(window.db, 'Vacancies'), orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(vacanciesQuery);
+    
+    allPlayerVacancies = [];
+    const uniqueTeams = new Set();
+    
+    querySnapshot.forEach((doc) => {
+      const data = { id: doc.id, ...doc.data() };
+      allPlayerVacancies.push(data);
+      if (data.club) uniqueTeams.add(data.club);
+    });
+
+    const teamFilter = document.getElementById('playerTeamFilter');
+    teamFilter.innerHTML = '<option value="">All Teams</option>';
+    Array.from(uniqueTeams).sort().forEach(team => {
+      const option = document.createElement('option');
+      option.value = team;
+      option.textContent = team;
+      teamFilter.appendChild(option);
+    });
+
+    document.getElementById('playerCount').textContent = allPlayerVacancies.length;
+    displayPlayerVacancies(allPlayerVacancies);
+    
+    console.log('Player vacancies loaded:', allPlayerVacancies.length);
+    
+  } catch (error) {
+    console.error('Error loading player vacancies:', error);
+    document.getElementById('playerVacancies').innerHTML = `
+      <div class="empty-state">
+        <h3>Error loading vacancies</h3>
+        <p>Please refresh the page to try again</p>
+      </div>
+    `;
+  }
+}
+
+// Load Coach Vacancies
+async function loadCoachVacancies() {
+  try {
+    if (!window.firebaseReady) {
+      setTimeout(loadCoachVacancies, 500);
+      return;
+    }
+
+    const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    
+    const vacanciesQuery = query(collection(window.db, 'coachVacancies'), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(vacanciesQuery);
+    
+    allCoachVacancies = [];
+    const uniqueTeams = new Set();
+    
+    querySnapshot.forEach((doc) => {
+      const data = { id: doc.id, ...doc.data() };
+      allCoachVacancies.push(data);
+      const teamName = data.teamName || data.clubName || data.club;
+      if (teamName) uniqueTeams.add(teamName);
+    });
+
+    const teamFilter = document.getElementById('coachTeamFilter');
+    teamFilter.innerHTML = '<option value="">All Teams/Clubs</option>';
+    Array.from(uniqueTeams).sort().forEach(team => {
+      const option = document.createElement('option');
+      option.value = team;
+      option.textContent = team;
+      teamFilter.appendChild(option);
+    });
+
+    document.getElementById('coachCount').textContent = allCoachVacancies.length;
+    displayCoachVacancies(allCoachVacancies);
+    
+    console.log('Coach vacancies loaded:', allCoachVacancies.length);
+    
+  } catch (error) {
+    console.error('Error loading coach vacancies:', error);
+    document.getElementById('coachVacancies').innerHTML = `
+      <div class="empty-state">
+        <h3>No coach vacancies yet</h3>
+        <p>Check back soon for coaching opportunities</p>
+      </div>
+    `;
+  }
+}
+
+// Display Player Vacancies
+function displayPlayerVacancies(vacancies) {
+  const container = document.getElementById('playerVacancies');
+  
+  if (vacancies.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>No player vacancies found</h3>
+        <p>Try adjusting your filters or check back later</p>
+      </div>
+    `;
+    return;
   }
 
-  function closeMenu() {
-    sideMenu.classList.remove('open');
-    overlay.classList.remove('active');
-    burger.classList.remove('open');
-    document.body.classList.remove('menu-open');
+  container.innerHTML = vacancies.map(vacancy => {
+    const clubName = vacancy.club || 'Team Name';
+    const teamSlug = clubName.toLowerCase().replace(/\s+/g, '-');
+const logoUrl = vacancy.clubLogo || `images/teamLogos/${teamSlug}.png`;
+
+return `
+  <div class="vacancy-card">
+    <div class="club-logo-container">
+      <img src="${logoUrl}" 
+           alt="${clubName} logo" 
+           class="club-logo"
+           onerror="this.onerror=function(){this.onerror=null; this.src='images/default-club-logo.png';}; this.src='images/teamLogos/${teamSlug}.jpg';">
+    </div>
+        <h3>${vacancy.position || 'Any Position'}</h3>
+        <div class="team-name">${clubName}</div>
+        <div class="vacancy-details">
+          <p><span class="icon">📍</span>${vacancy.location || 'Location not specified'}</p>
+          <p><span class="icon">👤</span>${vacancy.managerName || 'Manager'}</p>
+          ${vacancy.age ? `<p><span class="icon">🎂</span>${vacancy.age}</p>` : ''}
+          ${vacancy.experience ? `<p><span class="icon">📊</span>${vacancy.experience}</p>` : ''}
+          ${vacancy.description ? `<p><span class="icon">ℹ️</span>${vacancy.description}</p>` : ''}
+        </div>
+        <button class="contact-button" onclick="contactManager('${vacancy.id}', 'player')">
+          Contact Manager
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+// Display Coach Vacancies
+function displayCoachVacancies(vacancies) {
+  const container = document.getElementById('coachVacancies');
+  
+  if (vacancies.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>No coach vacancies found</h3>
+        <p>Try adjusting your filters or check back later</p>
+      </div>
+    `;
+    return;
   }
 
-  // Close menu when a link is clicked
-  document.addEventListener('DOMContentLoaded', function () {
-    const links = sideMenu.querySelectorAll('a');
-    links.forEach(link => link.addEventListener('click', closeMenu));
+  container.innerHTML = vacancies.map(vacancy => {
+    const teamName = vacancy.teamName || vacancy.clubName || vacancy.club || 'Club/Team Name';
+    const teamSlug = teamName.toLowerCase().replace(/\s+/g, '-');
+    const logoUrl = vacancy.clubLogo || `images/teamLogos/${teamSlug}.png`;
+    
+    return `
+      <div class="vacancy-card">
+        <div class="club-logo-container">
+          <img src="${logoUrl}" 
+               alt="${teamName} logo" 
+               class="club-logo"
+               onerror="this.onerror=function(){this.onerror=null; this.src='images/default-club-logo.png';}; this.src='images/teamLogos/${teamSlug}.jpg';">
+        </div>
+        <h3>${vacancy.position || 'Coach/Manager Position'}</h3>
+        <div class="team-name">${teamName}</div>
+        <div class="vacancy-details">
+          <p><span class="icon">📍</span>${vacancy.location || 'Location not specified'}</p>
+          <p><span class="icon">👤</span>${vacancy.postedBy || vacancy.managerName || 'Contact'}</p>
+          ${vacancy.teamLevel || vacancy.age ? `<p><span class="icon">⚽</span>${vacancy.teamLevel || vacancy.age}</p>` : ''}
+          ${vacancy.experience ? `<p><span class="icon">📊</span>Experience: ${vacancy.experience}</p>` : ''}
+          ${vacancy.description ? `<p><span class="icon">ℹ️</span>${vacancy.description}</p>` : ''}
+        </div>
+        <button class="contact-button" onclick="contactManager('${vacancy.id}', 'coach')">
+          Contact Club
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+// Filter Player Vacancies
+function filterPlayers() {
+  const teamFilter = document.getElementById('playerTeamFilter').value;
+  const locationFilter = document.getElementById('playerLocationFilter').value;
+  const ageFilter = document.getElementById('playerAgeFilter').value;
+  const positionFilter = document.getElementById('playerPositionFilter').value;
+  const experienceFilter = document.getElementById('playerExperienceFilter').value;
+
+  const filtered = allPlayerVacancies.filter(vacancy => {
+    const matchesTeam = !teamFilter || vacancy.club === teamFilter;
+    const matchesLocation = !locationFilter || vacancy.location === locationFilter;
+    const matchesAge = !ageFilter || vacancy.age === ageFilter;
+    const matchesPosition = !positionFilter || vacancy.position === positionFilter;
+    const matchesExperience = !experienceFilter || vacancy.experience === experienceFilter;
+
+    return matchesTeam && matchesLocation && matchesAge && matchesPosition && matchesExperience;
   });
+
+  displayPlayerVacancies(filtered);
+}
+
+// Filter Coach Vacancies
+function filterCoaches() {
+  const teamFilter = document.getElementById('coachTeamFilter').value;
+  const locationFilter = document.getElementById('coachLocationFilter').value;
+  const ageFilter = document.getElementById('coachAgeFilter').value;
+  const positionFilter = document.getElementById('coachPositionFilter').value;
+  const experienceFilter = document.getElementById('coachExperienceFilter').value;
+
+  const filtered = allCoachVacancies.filter(vacancy => {
+    const teamName = vacancy.teamName || vacancy.clubName || vacancy.club;
+    const matchesTeam = !teamFilter || teamName === teamFilter;
+    const matchesLocation = !locationFilter || vacancy.location === locationFilter;
+    const matchesAge = !ageFilter || vacancy.teamLevel === ageFilter || vacancy.age === ageFilter;
+    const matchesPosition = !positionFilter || vacancy.position === positionFilter;
+    const matchesExperience = !experienceFilter || vacancy.experience === experienceFilter;
+
+    return matchesTeam && matchesLocation && matchesAge && matchesPosition && matchesExperience;
+  });
+
+  displayCoachVacancies(filtered);
+}
+
+// Clear Filters
+function clearPlayerFilters() {
+  document.getElementById('playerTeamFilter').value = '';
+  document.getElementById('playerLocationFilter').value = '';
+  document.getElementById('playerAgeFilter').value = '';
+  document.getElementById('playerPositionFilter').value = '';
+  document.getElementById('playerExperienceFilter').value = '';
+  displayPlayerVacancies(allPlayerVacancies);
+}
+
+function clearCoachFilters() {
+  document.getElementById('coachTeamFilter').value = '';
+  document.getElementById('coachLocationFilter').value = '';
+  document.getElementById('coachAgeFilter').value = '';
+  document.getElementById('coachPositionFilter').value = '';
+  document.getElementById('coachExperienceFilter').value = '';
+  displayCoachVacancies(allCoachVacancies);
+}
+
+// Contact Manager - Show overlay (FIXED VERSION)
+async function contactManager(vacancyId, type) {
+  try {
+    const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    
+    const collectionName = type === 'player' ? 'Vacancies' : 'coachVacancies';
+    const vacancyDoc = await getDoc(doc(window.db, collectionName, vacancyId));
+    
+    if (vacancyDoc.exists()) {
+      const vacancy = vacancyDoc.data();
+      
+      // Get manager details from managerProfiles collection
+      const managerId = vacancy.managerId;
+      let managerName = 'Manager';
+      let managerPhone = '';
+      
+      if (managerId) {
+        const managerDoc = await getDoc(doc(window.db, 'managerProfiles', managerId));
+        if (managerDoc.exists()) {
+          const managerData = managerDoc.data();
+          managerName = managerData.managerName || 'Manager';
+          managerPhone = managerData.phone || '';
+        }
+      }
+      
+      // Store contact details
+      currentContact.email = vacancy.managerEmail || '';
+      currentContact.phone = managerPhone;
+      currentContact.name = managerName;
+      currentContact.teamName = vacancy.club || vacancy.teamName || 'Team';
+      currentContact.position = vacancy.position || 'position';
+      
+      console.log('Contact details:', currentContact);
+      
+      // Update overlay content
+      document.getElementById('contactManagerName').textContent = currentContact.name;
+      document.getElementById('contactTeamName').textContent = currentContact.teamName;
+      
+      // Show/hide buttons based on available contact info
+      const emailBtn = document.getElementById('emailBtn');
+      const callBtn = document.getElementById('callBtn');
+      const smsBtn = document.getElementById('smsBtn');
+      const whatsappBtn = document.getElementById('whatsappBtn');
+      
+      if (currentContact.email) {
+        emailBtn.style.display = 'flex';
+      } else {
+        emailBtn.style.display = 'none';
+      }
+      
+      if (currentContact.phone) {
+        callBtn.style.display = 'flex';
+        smsBtn.style.display = 'flex';
+        whatsappBtn.style.display = 'flex';
+      } else {
+        callBtn.style.display = 'none';
+        smsBtn.style.display = 'none';
+        whatsappBtn.style.display = 'none';
+      }
+      
+      // Show overlay
+      document.getElementById('contactOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+  } catch (error) {
+    console.error('Error getting contact info:', error);
+    alert('Unable to get contact information. Please try again.');
+  }
+}
+
+// Close contact overlay
+function closeContactOverlay(event) {
+  if (event && event.target !== event.currentTarget && !event.target.classList.contains('contact-close')) {
+    return;
+  }
+  document.getElementById('contactOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// Send Email
+function sendEmail() {
+  if (!currentContact.email) {
+    alert('Email address not available');
+    return;
+  }
+  
+  const subject = `Interest in ${currentContact.position} position at ${currentContact.teamName}`;
+  const body = `Hi ${currentContact.name},\n\nI'm interested in the ${currentContact.position} position at ${currentContact.teamName}.\n\nPlease let me know more details.\n\nThank you!`;
+  
+  window.location.href = `mailto:${currentContact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  closeContactOverlay();
+}
+
+// Call Manager
+function callManager() {
+  if (!currentContact.phone) {
+    alert('Phone number not available');
+    return;
+  }
+  
+  window.location.href = `tel:${currentContact.phone}`;
+  closeContactOverlay();
+}
+
+// Send SMS
+function sendSMS() {
+  if (!currentContact.phone) {
+    alert('Phone number not available');
+    return;
+  }
+  
+  const message = `Hi ${currentContact.name}, I'm interested in the ${currentContact.position} position at ${currentContact.teamName}. Please let me know more details. Thank you!`;
+  window.location.href = `sms:${currentContact.phone}?body=${encodeURIComponent(message)}`;
+  closeContactOverlay();
+}
+
+// Send WhatsApp
+function sendWhatsApp() {
+  if (!currentContact.phone) {
+    alert('Phone number not available');
+    return;
+  }
+  
+  // Convert UK phone format to international (remove leading 0, add 44)
+  let phoneNumber = currentContact.phone.replace(/\s+/g, '');
+  if (phoneNumber.startsWith('0')) {
+    phoneNumber = '44' + phoneNumber.substring(1);
+  }
+  
+  const message = `Hi ${currentContact.name}, I'm interested in the ${currentContact.position} position at ${currentContact.teamName}. Please let me know more details. Thank you!`;
+  window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
+  closeContactOverlay();
+}
 </script>
 
 <script src="js/login-popup.js"></script>
-
-<!-- Firebase & App Logic -->
-<script type="module">
-  import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-  import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-  // ===== Firebase Initialization =====
-  let app, auth, db;
-  if (!getApps().length) {
-    const firebaseConfig = {
-      apiKey: "AIzaSyAX9ivQ4aKQzokUMEkNpGTIbbAUMJhLlys",
-      authDomain: "playon-1a86b.firebaseapp.com",
-      projectId: "playon-1a86b",
-      storageBucket: "playon-1a86b.appspot.com",
-      messagingSenderId: "28141646391",
-      appId: "1:28141646391:web:98d83339ed46c17efa45b2",
-      measurementId: "G-Z12HWY8PFJ"
-    };
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
-  }
-
-  auth = getAuth(app);
-  db = getFirestore(app);
-  window.auth = auth;
-  window.db = db;
-  window.firebaseReady = true;
-
-  console.log('Firebase initialized');
-
-  // ===== Side Menu Login Status =====
-  const loginLink = document.querySelector('#sideMenu a[onclick*="showLogin"]');
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      loginLink.textContent = `Logout (${user.email})`;
-      loginLink.onclick = async () => {
-        await auth.signOut();
-        window.location.reload();
-      };
-    }
-  });
-
-  // ===== Load Vacancies on Page Load =====
-  document.addEventListener('DOMContentLoaded', () => {
-    loadVacancies();
-  });
-
-  // ===== Load ALL Vacancies (Public View) =====
-  async function loadVacancies() {
-    const vacancyContainer = document.getElementById('vacancyList');
-    const filterTeam = document.getElementById('filterTeam');
-    const filterLocation = document.getElementById('filterLocation');
-    const filterPosition = document.getElementById('filterPosition');
-    const filterExperience = document.getElementById('filterExperience');
-
-    try {
-      if (!window.firebaseReady) {
-        setTimeout(loadVacancies, 500);
-        return;
-      }
-
-      // Load ALL vacancies - no filtering by managerId on public page
-      const querySnapshot = await getDocs(collection(db, 'Vacancies'));
-
-      vacancyContainer.innerHTML = '';
-      const teamsSet = new Set();
-      const locationsSet = new Set();
-
-      querySnapshot.forEach(docSnapshot => {
-        const data = docSnapshot.data();
-        const vacancyId = docSnapshot.id;
-        const logoSrc = `images/teamLogos/${data.club.replace(/\s+/g, '')}.png`;
-
-        const card = document.createElement('div');
-        card.className = 'vacancy-card';
-        card.innerHTML = `
-          <img src="${logoSrc}" alt="${data.club} Logo" onerror="this.src='images/teamLogos/logo.png'"/>
-          <div style="flex: 1;">
-            <h3>${data.club || 'Unknown Team'}</h3>
-            <p>⚡ Position: ${data.position || '-'}</p>
-            <p>🎯 Experience: ${data.experience || '-'}</p>
-            <p>📍 Location: ${data.location || '-'}</p>
-            <p>👶 Age: ${data.age || '-'}</p>
-            <button class="contact-manager-btn" onclick="openContactModal('${vacancyId}', '${data.managerId || ''}', '${data.club}', '${data.position}', '${data.age}')">
-              Contact Manager
-            </button>
-          </div>
-        `;
-        vacancyContainer.appendChild(card);
-
-        if (data.club) teamsSet.add(data.club);
-        if (data.location) locationsSet.add(data.location);
-      });
-
-      // Populate filter dropdowns
-      filterTeam.innerHTML = `<option value="">All Teams</option>` + [...teamsSet].map(t => `<option>${t}</option>`).join('');
-      filterLocation.innerHTML = `<option value="">All Locations</option>` + [...locationsSet].map(l => `<option>${l}</option>`).join('');
-
-      // Add filter event listeners
-      const filterAge = document.getElementById('filterAge');
-      [filterTeam, filterLocation, filterAge, filterPosition, filterExperience].forEach(select => {
-        select.addEventListener('change', () => {
-          const teamVal = filterTeam.value;
-          const locationVal = filterLocation.value;
-          const ageVal = filterAge.value;
-          const positionVal = filterPosition.value;
-          const expVal = filterExperience.value;
-
-          document.querySelectorAll('.vacancy-card').forEach(card => {
-            const text = card.innerText;
-            const show = (!teamVal || text.includes(teamVal)) &&
-                         (!locationVal || text.includes(locationVal)) &&
-                         (!ageVal || text.includes(ageVal)) &&
-                         (!positionVal || text.includes(positionVal)) &&
-                         (!expVal || text.includes(expVal));
-            card.style.display = show ? 'flex' : 'none';
-          });
-        });
-      });
-
-    } catch (err) {
-      console.error('Error loading vacancies:', err);
-      vacancyContainer.innerHTML = '<p>Error loading vacancies. Please refresh.</p>';
-    }
-  }
-
-  // ===== Open Contact Modal =====
-  window.openContactModal = async function(vacancyId, managerId, teamName, position, age) {
-    const overlay = document.getElementById('contactOverlay');
-    const managerNameDisplay = document.getElementById('managerNameDisplay');
-    const teamNameDisplay = document.getElementById('teamNameDisplay');
-    const vacancyDetailsText = document.getElementById('vacancyDetailsText');
-    const contactOptions = document.getElementById('contactOptions');
-
-    // Show overlay immediately
-    overlay.classList.add('active');
-    
-    // Set vacancy details
-    teamNameDisplay.textContent = teamName;
-    vacancyDetailsText.textContent = `${position} • ${age}`;
-
-    // Check if managerId exists
-    if (!managerId) {
-      managerNameDisplay.textContent = 'Not Available';
-      contactOptions.innerHTML = '<p style="color: #999; text-align: center;">Contact information not available for this vacancy.</p>';
-      return;
-    }
-
-    // Show loading state
-    managerNameDisplay.textContent = 'Loading...';
-    contactOptions.innerHTML = '<p style="color: #999; text-align: center;">Loading contact options...</p>';
-
-    try {
-      // Fetch manager profile from Firestore
-      const managerDoc = await getDoc(doc(db, 'managerProfiles', managerId));
-      
-      if (!managerDoc.exists()) {
-        managerNameDisplay.textContent = 'Not Available';
-        contactOptions.innerHTML = '<p style="color: #999; text-align: center;">Manager profile not found.</p>';
-        return;
-      }
-
-      const managerData = managerDoc.data();
-      const managerName = managerData.managerName || 'Manager';
-      const email = managerData.email || '';
-      const phone = managerData.phone || '';
-
-      // Display manager name
-      managerNameDisplay.textContent = managerName;
-
-      // Pre-filled message for SMS and WhatsApp
-      const message = `Hi ${managerName}, I'm interested in the ${position} vacancy for ${teamName} ${age}. Can we discuss this opportunity?`;
-      const encodedMessage = encodeURIComponent(message);
-
-      // Build contact options
-      let contactHTML = '';
-
-      if (email) {
-        const mailtoLink = `mailto:${email}?subject=Interested in ${position} vacancy - ${teamName}&body=${encodedMessage}`;
-        contactHTML += `
-          <a href="${mailtoLink}" class="contact-btn">
-            <span class="icon">📧</span>
-            <span class="label">Send Email</span>
-            <span class="arrow">→</span>
-          </a>
-        `;
-      }
-
-      if (phone) {
-        const cleanPhone = phone.replace(/\s+/g, '');
-        
-        contactHTML += `
-          <a href="tel:${cleanPhone}" class="contact-btn">
-            <span class="icon">📞</span>
-            <span class="label">Call Manager</span>
-            <span class="arrow">→</span>
-          </a>
-        `;
-
-        contactHTML += `
-          <a href="sms:${cleanPhone}?&body=${encodedMessage}" class="contact-btn">
-            <span class="icon">💬</span>
-            <span class="label">Send Text Message</span>
-            <span class="arrow">→</span>
-          </a>
-        `;
-
-        // WhatsApp link (remove leading 0 and add country code if needed)
-        let whatsappPhone = cleanPhone;
-        if (whatsappPhone.startsWith('0')) {
-          whatsappPhone = '44' + whatsappPhone.substring(1); // UK country code
-        }
-        
-        contactHTML += `
-          <a href="https://wa.me/${whatsappPhone}?text=${encodedMessage}" target="_blank" class="contact-btn">
-            <span class="icon">💚</span>
-            <span class="label">WhatsApp Message</span>
-            <span class="arrow">→</span>
-          </a>
-        `;
-      }
-
-      if (!email && !phone) {
-        contactHTML = '<p style="color: #999; text-align: center;">No contact information available.</p>';
-      }
-
-      contactOptions.innerHTML = contactHTML;
-
-    } catch (error) {
-      console.error('Error fetching manager profile:', error);
-      managerNameDisplay.textContent = 'Error';
-      contactOptions.innerHTML = '<p style="color: #dc3545; text-align: center;">Error loading contact information.</p>';
-    }
-  };
-
-  // ===== Close Contact Modal =====
-  window.closeContactModal = function(event) {
-    if (event && event.target.id !== 'contactOverlay' && event.currentTarget !== event.target) {
-      return;
-    }
-    document.getElementById('contactOverlay').classList.remove('active');
-  };
-
-</script>
 
 </body>
 </html>

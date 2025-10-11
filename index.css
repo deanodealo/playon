@@ -301,6 +301,7 @@ footer a {
     margin: 1rem;
   }
 }
+
 /* Manager Register Form Card */
 .register-hero .register-form-container {
   background: #f9f9f9;
@@ -588,4 +589,44 @@ footer a {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+}
+.club-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  height: 80px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.club-logo {
+  max-width: 100%;
+  max-height: 80px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Hide the text badge since we're showing logos */
+.vacancy-type-badge {
+  display: none;
+}
+.vacancy-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.vacancy-logo img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #eee;
 }

@@ -1,329 +1,245 @@
-// Login popup functionality - shared across all pages
-document.addEventListener('DOMContentLoaded', function () {
-  const loginOverlay = document.getElementById('loginOverlay');
+// Login popup functionality
+let auth = null;
+let db = null;
 
-  // Initialize Firebase Auth State Management
-  initializeAuthState();
-
-  // Global ESC key handler for both menu and login
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (loginOverlay && loginOverlay.classList.contains('active')) {
-        closeLogin();
-      } else if (typeof closeMenu === 'function') {
-        closeMenu();
-      }
+// Initialize Firebase (check if page already did it, otherwise do it here)
+async function initializeAuthState() {
+  try {
+    // Check if Firebase is already initialized by the page
+    if (window.auth && window.db) {
+      auth = window.auth;
+      db = window.db;
+      console.log('Using existing Firebase instance from page');
+      return;
     }
+
+    // If not initialized yet, initialize it here
+    console.log('Initializing Firebase from login-popup.js...');
+    
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+    const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAX9ivQ4aKQzokUMEkNpGTIbbAUMJhLlys",
+      authDomain: "playon-1a86b.firebaseapp.com",
+      projectId: "playon-1a86b",
+      storageBucket: "playon-1a86b.firebasestorage.app",
+      messagingSenderId: "28141646391",
+      appId: "1:28141646391:web:98d83339ed46c17efa45b2",
+      measurementId: "G-Z12HWY8PFJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    
+    window.auth = auth;
+    window.db = db;
+    window.firebaseReady = true;
+    
+    console.log('Firebase initialized successfully by login-popup.js');
+
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
+  }
+}
+
+// Initialize when DOM loads
+document.addEventListener('DOMContentLoaded', async function() {
+  await initializeAuthState();
+  checkAuthState(); // Check if user is logged in
+});
+
+// Check authentication state and update UI
+async function checkAuthState() {
+  try {
+    if (!auth) {
+      console.log('Auth not ready, waiting...');
+      setTimeout(checkAuthState, 500);
+      return;
+    }
+
+    const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+    
+    onAuthStateChanged(auth, (user) => {
+      const sideMenu = document.getElementById('sideMenu');
+      
+      if (user) {
+        // User is logged in
+        console.log('User is logged in:', user.email);
+        updateMenuForLoggedInUser(sideMenu);
+      } else {
+        // User is logged out
+        console.log('User is logged out');
+        updateMenuForLoggedOutUser(sideMenu);
+      }
+    });
+  } catch (error) {
+    console.error('Error checking auth state:', error);
+  }
+}
+
+// Update menu for logged-in user
+function updateMenuForLoggedInUser(sideMenu) {
+  if (!sideMenu) return;
+  
+  // Find the menu logo to insert items before it
+  const menuLogo = sideMenu.querySelector('.menu-logo');
+  
+  // Remove existing nav items and user info (except logo)
+  const existingLinks = sideMenu.querySelectorAll('a');
+  existingLinks.forEach(link => link.remove());
+  const existingUserInfo = sideMenu.querySelector('.user-info');
+  if (existingUserInfo) existingUserInfo.remove();
+  
+  // Create logged-in menu items
+  const menuItems = [
+    { href: 'index.html', text: 'Home' },
+    { href: 'about.html', text: 'About' },
+    { href: 'vacancies.html', text: 'Vacancies' },
+    { href: 'manager-vacancies.html', text: 'Manage Vacancies' },
+  ];
+  
+  // Add menu items
+  menuItems.forEach(item => {
+    const link = document.createElement('a');
+    link.href = item.href;
+    link.textContent = item.text;
+    sideMenu.insertBefore(link, menuLogo);
   });
+  
+  // Add user info display AFTER menu items
+  const userInfo = document.createElement('div');
+  userInfo.className = 'user-info';
+  userInfo.innerHTML = `
+    <div style="color: #fff; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.2); margin-bottom: 1rem;">
+      <small>Logged in as:</small><br>
+      <strong>${auth.currentUser?.displayName || auth.currentUser?.email || 'User'}</strong>
+    </div>
+  `;
+  sideMenu.insertBefore(userInfo, menuLogo);
+  
+  // Add logout link at the end
+  const logoutLink = document.createElement('a');
+  logoutLink.href = '#';
+  logoutLink.textContent = 'Logout';
+  logoutLink.setAttribute('onclick', 'logout()');
+  sideMenu.insertBefore(logoutLink, menuLogo);
+}
 
-  // Login popup functions
-  window.showLogin = function(event) {
-    event.preventDefault();
-    if (typeof closeMenu === 'function') {
-      closeMenu(); // Close the menu first
+// Update menu for logged-out user
+function updateMenuForLoggedOutUser(sideMenu) {
+  if (!sideMenu) return;
+  
+  // Find the menu logo
+  const menuLogo = sideMenu.querySelector('.menu-logo');
+  
+  // Remove existing nav items (except logo)
+  const existingLinks = sideMenu.querySelectorAll('a');
+  existingLinks.forEach(link => link.remove());
+  
+  // Remove user info if exists
+  const existingUserInfo = sideMenu.querySelector('.user-info');
+  if (existingUserInfo) existingUserInfo.remove();
+  
+  // Create logged-out menu
+  const menuItems = [
+    { href: 'index.html', text: 'Home' },
+    { href: 'about.html', text: 'About' },
+    { href: 'vacancies.html', text: 'Vacancies' },
+    { href: '#', text: 'Login', onclick: 'showLogin(event)' },
+    { href: 'register.html', text: 'Register' }
+  ];
+  
+  menuItems.forEach(item => {
+    const link = document.createElement('a');
+    link.href = item.href;
+    link.textContent = item.text;
+    if (item.onclick) {
+      link.setAttribute('onclick', item.onclick);
     }
-    if (loginOverlay) {
-      loginOverlay.classList.add('active');
-      document.body.style.overflow = 'hidden'; // Prevent scrolling
+    sideMenu.insertBefore(link, menuLogo);
+  });
+}
+
+// Show login popup
+function showLogin(event) {
+  if (event) event.preventDefault();
+  document.getElementById('loginOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+// Close login popup
+function closeLogin(event) {
+  if (event) {
+    if (event.target.id === 'loginOverlay' || event.target.classList.contains('login-close')) {
+      document.getElementById('loginOverlay').classList.remove('active');
+      document.body.style.overflow = '';
       
-      // Focus on email input
-      setTimeout(() => {
-        const emailInput = document.getElementById('loginEmail');
-        if (emailInput) emailInput.focus();
-      }, 100);
-    }
-  };
-
-  window.closeLogin = function(event) {
-    if (event && event.target !== loginOverlay && event.target.closest('.login-form-container')) {
-      return; // Don't close if clicking inside the form
-    }
-    
-    if (loginOverlay) {
-      loginOverlay.classList.remove('active');
-      document.body.style.overflow = ''; // Restore scrolling
-      
-      // Clear form
-      const loginForm = document.getElementById('loginForm');
-      const loginMessage = document.getElementById('loginMessage');
-      if (loginForm) loginForm.reset();
-      if (loginMessage) loginMessage.textContent = '';
-    }
-  };
-
-  // Logout function
-  window.handleLogout = async function(event) {
-    event.preventDefault();
-    
-    try {
-      if (window.auth) {
-        const { signOut } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        await signOut(window.auth);
-        console.log('User logged out');
-        
-        // Close menu after logout
-        if (typeof closeMenu === 'function') {
-          closeMenu();
-        }
-        
-        // Refresh page to reset state
-        window.location.reload();
+      // Clear any error messages
+      const msg = document.getElementById('loginMessage');
+      if (msg) {
+        msg.textContent = '';
+        msg.className = 'login-message';
       }
-    } catch (error) {
-      console.error('Logout error:', error);
-      alert('Error logging out. Please try again.');
     }
-  };
-
-  // Forgot password function
-  window.forgotPassword = async function(event) {
-    event.preventDefault();
-    const emailInput = document.getElementById('loginEmail');
-    const email = emailInput ? emailInput.value.trim() : '';
-    
-    if (!email) {
-      showMessage('Please enter your email address first.', 'error');
-      return;
-    }
-    
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showMessage('Please enter a valid email address.', 'error');
-      return;
-    }
-    
-    try {
-      // Ensure Firebase is initialized
-      if (!window.auth) {
-        await initializeAuthState();
-      }
-      
-      // Import Firebase password reset function
-      const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-      
-      // Send password reset email
-      await sendPasswordResetEmail(window.auth, email);
-      
-      showMessage('Password reset email sent! Check your inbox and spam folder.', 'success');
-      console.log('Password reset email sent to:', email);
-      
-    } catch (error) {
-      console.error('Password reset error:', error);
-      
-      let errorMessage = 'Failed to send reset email. Please try again.';
-      
-      switch (error.code) {
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email address.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many requests. Please wait a moment and try again.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Please check your connection.';
-          break;
-      }
-      
-      showMessage(errorMessage, 'error');
-    }
-  };
-
-  // Show message helper
-  function showMessage(text, type) {
-    const messageEl = document.getElementById('loginMessage');
-    if (messageEl) {
-      messageEl.textContent = text;
-      messageEl.className = `login-message ${type}`;
-    }
+  } else {
+    document.getElementById('loginOverlay').classList.remove('active');
+    document.body.style.overflow = '';
   }
+}
 
-  // Initialize Firebase and Auth State Listener
-  async function initializeAuthState() {
-    try {
-      // Initialize Firebase if not already done
-      if (!window.auth) {
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        
-        const firebaseConfig = {
-          apiKey: "AIzaSyAX9ivQ4aKQzokUMEkNpGTIbbAUMJhLlys",
-          authDomain: "playon-1a86b.firebaseapp.com",
-          projectId: "playon-1a86b",
-          storageBucket: "playon-1a86b.firebasestorage.app",
-          messagingSenderId: "28141646391",
-          appId: "1:28141646391:web:98d83339ed46c17efa45b2"
-        };
-        
-        const app = initializeApp(firebaseConfig);
-        window.auth = getAuth(app);
-      }
-
-      // Set up auth state listener
-      const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-      
-      onAuthStateChanged(window.auth, (user) => {
-        updateMenuForAuthState(user);
-      });
-
-    } catch (error) {
-      console.error('Firebase initialization error:', error);
-    }
-  }
-
-  // Update menu based on authentication state
-  async function updateMenuForAuthState(user) {
-    const sideMenu = document.getElementById('sideMenu');
-    if (!sideMenu) return;
-
-    // Find existing auth-related links
-    const loginLink = sideMenu.querySelector('a[onclick*="showLogin"]');
-    const registerLink = sideMenu.querySelector('a[href*="register"]');
-    const logoutLink = sideMenu.querySelector('a[onclick*="handleLogout"]');
-    const userInfo = sideMenu.querySelector('.user-info');
-    const myVacanciesLink = sideMenu.querySelector('a[href*="manager-vacancies"]');
-
-    if (user) {
-      // User is logged in - check if they're a manager
-      let isManager = false;
-      
-      try {
-        // Initialize Firestore if needed
-        if (!window.db) {
-          const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-          window.db = getFirestore();
-        }
-        
-        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-        const userDoc = await getDoc(doc(window.db, 'users', user.uid));
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          isManager = userData.userType === 'manager';
-          console.log('User type:', userData.userType);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-
-      // Hide login and register links
-      if (loginLink) loginLink.style.display = 'none';
-      if (registerLink) registerLink.style.display = 'none';
-
-      // Create or show user info
-      if (!userInfo) {
-        const userInfoDiv = document.createElement('div');
-        userInfoDiv.className = 'user-info';
-        userInfoDiv.innerHTML = `
-          <div style="color: #fff; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.2); margin-bottom: 1rem;">
-            <small>Logged in as:</small><br>
-            <strong>${user.displayName || user.email}</strong>
-          </div>
-        `;
-        
-        // Insert after the vacancies link
-        const vacanciesLink = sideMenu.querySelector('a[href*="vacancies"]');
-        if (vacanciesLink) {
-          vacanciesLink.insertAdjacentElement('afterend', userInfoDiv);
-        }
-      } else {
-        userInfo.style.display = 'block';
-      }
-
-      // Show "My Vacancies" link only for managers
-      if (isManager) {
-        if (!myVacanciesLink) {
-          const myVacanciesLinkEl = document.createElement('a');
-          myVacanciesLinkEl.href = 'manager-vacancies.html';
-          myVacanciesLinkEl.textContent = 'My Vacancies';
-          myVacanciesLinkEl.className = 'manager-link';
-          
-          // Insert after the vacancies link
-          const vacanciesLink = sideMenu.querySelector('a[href*="vacancies.html"]');
-          if (vacanciesLink) {
-            vacanciesLink.insertAdjacentElement('afterend', myVacanciesLinkEl);
-          }
-        } else {
-          myVacanciesLink.style.display = 'block';
-        }
-      } else {
-        // Hide for non-managers
-        if (myVacanciesLink) myVacanciesLink.style.display = 'none';
-      }
-
-      // Create or show logout link
-      if (!logoutLink) {
-        const logoutLinkEl = document.createElement('a');
-        logoutLinkEl.href = '#';
-        logoutLinkEl.onclick = handleLogout;
-        logoutLinkEl.textContent = 'Logout';
-        logoutLinkEl.className = 'logout-link';
-        
-        // Insert before the menu logo
-        const menuLogo = sideMenu.querySelector('.menu-logo');
-        if (menuLogo) {
-          menuLogo.insertAdjacentElement('beforebegin', logoutLinkEl);
-        }
-      } else {
-        logoutLink.style.display = 'block';
-      }
-
-    } else {
-      // User is logged out
-      console.log('User is logged out');
-
-      // Show login and register links
-      if (loginLink) loginLink.style.display = 'block';
-      if (registerLink) registerLink.style.display = 'block';
-
-      // Hide manager-specific links, logout link and user info
-      if (myVacanciesLink) myVacanciesLink.style.display = 'none';
-      if (logoutLink) logoutLink.style.display = 'none';
-      if (userInfo) userInfo.style.display = 'none';
-    }
-  }
-
-  // Firebase login handler
+// Handle login form submission
+document.addEventListener('DOMContentLoaded', function() {
   const loginForm = document.getElementById('loginForm');
+  
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const emailInput = document.getElementById('loginEmail');
-      const passwordInput = document.getElementById('loginPassword');
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
       const loginBtn = document.getElementById('loginBtn');
+      const msg = document.getElementById('loginMessage');
       
-      if (!emailInput || !passwordInput || !loginBtn) return;
-      
-      const email = emailInput.value;
-      const password = passwordInput.value;
-      
+      // Disable button and show loading
       loginBtn.disabled = true;
-      loginBtn.textContent = 'Signing in...';
+      loginBtn.textContent = 'Logging in...';
       
       try {
-        // Import Firebase auth functions
+        // Wait for Firebase to be ready
+        if (!auth) {
+          await initializeAuthState();
+          // Give it a moment to initialize
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        if (!auth) {
+          throw new Error('Firebase authentication not available. Please refresh the page.');
+        }
+
+        // Import signInWithEmailAndPassword
         const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
         
-        // Ensure Firebase is initialized
-        if (!window.auth) {
-          await initializeAuthState();
-        }
-        
-        // Sign in user
-        const userCredential = await signInWithEmailAndPassword(window.auth, email, password);
+        // Sign in
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
-        showMessage('Login successful!', 'success');
-console.log('User logged in:', user.uid);
-
-setTimeout(() => {
-  window.closeLogin();
-  window.location.reload(); // Reload page to refresh all content
-}, 1500);
+        console.log('User logged in:', user.uid);
+        
+        // Show success message
+        msg.textContent = 'Login successful! Redirecting...';
+        msg.className = 'login-message success';
+        
+        // Clear form
+        loginForm.reset();
+        
+        // Close popup and reload to update menu
+        setTimeout(() => {
+          closeLogin();
+          window.location.reload(); // Reload current page to update menu
+        }, 1000);
         
       } catch (error) {
         console.error('Login error:', error);
@@ -331,25 +247,109 @@ setTimeout(() => {
         let errorMessage = 'Login failed. Please try again.';
         
         switch (error.code) {
+          case 'auth/invalid-email':
+            errorMessage = 'Invalid email address.';
+            break;
+          case 'auth/user-disabled':
+            errorMessage = 'This account has been disabled.';
+            break;
           case 'auth/user-not-found':
+            errorMessage = 'No account found with this email.';
+            break;
           case 'auth/wrong-password':
+            errorMessage = 'Incorrect password.';
+            break;
           case 'auth/invalid-credential':
             errorMessage = 'Invalid email or password.';
             break;
           case 'auth/too-many-requests':
             errorMessage = 'Too many failed attempts. Please try again later.';
             break;
-          case 'auth/network-request-failed':
-            errorMessage = 'Network error. Please check your connection.';
-            break;
+          default:
+            errorMessage = error.message || errorMessage;
         }
         
-        showMessage(errorMessage, 'error');
+        msg.textContent = errorMessage;
+        msg.className = 'login-message error';
         
       } finally {
+        // Re-enable button
         loginBtn.disabled = false;
         loginBtn.textContent = 'Login';
       }
     });
   }
 });
+
+// Forgot password functionality
+async function forgotPassword(event) {
+  event.preventDefault();
+  
+  const email = prompt('Please enter your email address:');
+  
+  if (!email) return;
+  
+  try {
+    // Wait for Firebase to be ready
+    if (!auth) {
+      await initializeAuthState();
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    if (!auth) {
+      alert('Firebase authentication not available. Please refresh the page.');
+      return;
+    }
+
+    const { sendPasswordResetEmail } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+    
+    await sendPasswordResetEmail(auth, email);
+    
+    alert('Password reset email sent! Please check your inbox.');
+    
+  } catch (error) {
+    console.error('Password reset error:', error);
+    
+    let errorMessage = 'Failed to send password reset email.';
+    
+    switch (error.code) {
+      case 'auth/invalid-email':
+        errorMessage = 'Invalid email address.';
+        break;
+      case 'auth/user-not-found':
+        errorMessage = 'No account found with this email.';
+        break;
+      default:
+        errorMessage = error.message || errorMessage;
+    }
+    
+    alert(errorMessage);
+  }
+}
+
+// Logout functionality
+async function logout() {
+  try {
+    if (!auth) {
+      await initializeAuthState();
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    if (!auth) {
+      console.error('Firebase authentication not available');
+      return;
+    }
+
+    const { signOut } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+    
+    await signOut(auth);
+    console.log('User logged out');
+    
+    // Reload current page to update menu
+    window.location.reload();
+    
+  } catch (error) {
+    console.error('Logout error:', error);
+    alert('Failed to logout. Please try again.');
+  }
+}
